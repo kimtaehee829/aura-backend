@@ -9,3 +9,7 @@ spring:
 
   jpa:
     show-sql: false
+
+aura:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173
