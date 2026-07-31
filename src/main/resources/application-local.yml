@@ -17,3 +17,7 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.flywaydb: info
+
+aura:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173

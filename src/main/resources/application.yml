@@ -19,3 +19,9 @@ spring:
 gcp:
   project-id: project-5860f6a9-47e2-47ef-9e8
   bucket-name: aura-media-bucket-2026
+
+openai:
+  api-key: ${OPENAI_API_KEY}
+  base-url: https://api.openai.com/v1
+  connect-timeout-ms: 2000
+  read-timeout-ms: 5000
