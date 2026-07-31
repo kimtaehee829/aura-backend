@@ -50,8 +50,6 @@ Thumbs.db
 
 ### Security & Secrets ###
 src/main/resources/application-secret.yml
-src/main/resources/application-prod.yml
-src/main/resources/application-dev.yml
 .env
 *.pem
 *.key

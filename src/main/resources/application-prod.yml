@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql:///aura?cloudSqlInstance=project-5860f6a9-47e2-47ef-9e8:asia-northeast3:aura-db&socketFactory=com.google.cloud.sql.mysql.SocketFactory&serverTimezone=UTC&characterEncoding=UTF-8
+    username: aura_app
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+
+  jpa:
+    show-sql: false
