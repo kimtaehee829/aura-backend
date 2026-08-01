@@ -23,5 +23,6 @@ gcp:
 openai:
   api-key: ${OPENAI_API_KEY}
   base-url: https://api.openai.com/v1
+  model: gpt-4o-mini
   connect-timeout-ms: 2000
   read-timeout-ms: 5000
