@@ -1,0 +1,50 @@
+name: CD (Continuous Deployment)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker to use Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build and Push Docker image
+        run: |
+          # Artifact Registry URL + 서비스명 + 커밋해시를 태그로 사용
+          IMAGE_TAG=${{ secrets.GCP_ARTIFACT_REGISTRY }}/aura-backend:${{ github.sha }}
+          
+          # 현재 디렉토리(레포지토리 최상단)에서 Dockerfile 빌드
+          docker build -t $IMAGE_TAG .
+          
+          # Artifact Registry로 이미지 푸시
+          docker push $IMAGE_TAG
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: 'aura-backend'
+          region: ${{ secrets.GCP_REGION }}
+          image: ${{ secrets.GCP_ARTIFACT_REGISTRY }}/aura-backend:${{ github.sha }}
+          flags: '--allow-unauthenticated'
