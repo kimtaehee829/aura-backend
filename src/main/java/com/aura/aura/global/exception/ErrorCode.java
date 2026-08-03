@@ -24,6 +24,7 @@ public enum ErrorCode {
     ACCESSORY_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "악세서리는 최대 1개까지 부착할 수 있습니다."),
 
     // ---------- AI 분석 ----------
+    ANALYSIS_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 아우라 분석이 완료된 세션입니다."),
     ANALYSIS_FAILED(HttpStatus.BAD_GATEWAY, "아우라 분석에 실패했습니다."),
     ANALYSIS_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "아우라 분석이 지연되고 있습니다."),
 
