@@ -1,5 +1,7 @@
 package com.aura.aura.domain.session.service;
 
+import com.aura.aura.domain.analysis.entity.AuraAnalysis;
+import com.aura.aura.domain.analysis.repository.AuraAnalysisRepository;
 import com.aura.aura.domain.product.entity.Product;
 import com.aura.aura.domain.product.repository.ProductRepository;
 import com.aura.aura.domain.session.dto.*;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class SessionService {
     private final SessionRepository sessionRepository;
     private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
+    private final AuraAnalysisRepository auraAnalysisRepository;
 
     @Transactional
     public SessionCreateResponse createSession(SessionCreateRequest request) {
@@ -102,8 +106,17 @@ public class SessionService {
                     .build();
         }
 
-        // TODO: AuraAnalysis 도메인이 완성되면 실제 데이터를 가져와 맵핑.
         SessionResponse.AuraDto auraDto = null;
+        Optional<AuraAnalysis> auraAnalysisOpt = auraAnalysisRepository.findBySessionId(session.getId());
+        if (auraAnalysisOpt.isPresent()) {
+            AuraAnalysis analysis = auraAnalysisOpt.get();
+            auraDto = SessionResponse.AuraDto.builder()
+                    .style(analysis.getStyle())
+                    .mood(analysis.getMood())
+                    .energyLevel(analysis.getEnergyLevel())
+                    .palette(java.util.List.of(analysis.getPalette1(), analysis.getPalette2(), analysis.getPalette3()))
+                    .build();
+        }
 
         return SessionResponse.builder()
                 .publicId(session.getPublicId())
