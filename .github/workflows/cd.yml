@@ -47,4 +47,9 @@ jobs:
           service: 'aura-backend'
           region: ${{ secrets.GCP_REGION }}
           image: ${{ secrets.GCP_ARTIFACT_REGISTRY }}/aura-backend:${{ github.sha }}
+          env_vars: |
+            SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
+            SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }}
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
           flags: '--allow-unauthenticated'
