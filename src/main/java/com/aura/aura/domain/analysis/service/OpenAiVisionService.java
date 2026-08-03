@@ -19,7 +19,7 @@ import java.util.List;
 public class OpenAiVisionService {
 
     private final RestClient openAiRestClient;
-    private final ObjectMapper objectMapper;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String SYSTEM_PROMPT = """
             이미지에 있는 사람의 착장을 분석하여 다음 항목을 추출하세요.
