@@ -115,6 +115,7 @@ public class SessionService {
                     .mood(analysis.getMood())
                     .energyLevel(analysis.getEnergyLevel())
                     .palette(java.util.List.of(analysis.getPalette1(), analysis.getPalette2(), analysis.getPalette3()))
+                    .patternUrl(com.aura.aura.domain.analysis.dto.AnalysisResponse.resolvePatternUrl(analysis.getMood()))
                     .build();
         }
 

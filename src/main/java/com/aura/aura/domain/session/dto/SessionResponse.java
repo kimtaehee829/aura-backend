@@ -40,5 +40,7 @@ public class SessionResponse {
         @JsonProperty("energy_level")
         private String energyLevel;
         private List<String> palette;
+        @JsonProperty("pattern_url")
+        private String patternUrl;
     }
 }
