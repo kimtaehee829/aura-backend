@@ -36,7 +36,9 @@ public class AnalysisService {
                 .mood(result.getMood())
                 .energyLevel(result.getEnergyLevel())
                 .palette(result.getPalette())
-                .isFallback(false)
+                .patternUrl(AnalysisResponse.resolvePatternUrl(result.getMood()))
+                .latencyMs((int) latencyMs)
+                .fallback(false)
                 .build();
     }
 
@@ -97,7 +99,9 @@ public class AnalysisService {
                 .mood("STREET")
                 .energyLevel("HIGH")
                 .palette(java.util.List.of("#2E4A7D", "#FFD700", "#1A1A2E"))
-                .isFallback(true)
+                .patternUrl(AnalysisResponse.resolvePatternUrl("STREET"))
+                .latencyMs((int) latencyMs)
+                .fallback(true)
                 .build();
     }
 }
