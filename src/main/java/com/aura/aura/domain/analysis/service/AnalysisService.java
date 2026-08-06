@@ -3,6 +3,7 @@ package com.aura.aura.domain.analysis.service;
 import com.aura.aura.domain.analysis.dto.AnalysisResponse;
 import com.aura.aura.domain.analysis.dto.openai.AuraAnalysisResult;
 import com.aura.aura.domain.analysis.entity.AuraAnalysis;
+import com.aura.aura.domain.analysis.entity.Mood;
 import com.aura.aura.domain.analysis.repository.AuraAnalysisRepository;
 import com.aura.aura.domain.session.entity.Session;
 import com.aura.aura.domain.session.repository.SessionRepository;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -31,11 +34,15 @@ public class AnalysisService {
             return buildFallbackResponse(latencyMs);
         }
 
+        String p1 = result.getPalette() != null && result.getPalette().size() > 0 ? result.getPalette().get(0) : "#000000";
+        String p2 = result.getPalette() != null && result.getPalette().size() > 1 ? result.getPalette().get(1) : "#000000";
+        String p3 = AuraColorDeriver.deriveAccent(p1, p2, Mood.from(result.getMood()));
+
         return AnalysisResponse.builder()
                 .style(result.getStyle())
                 .mood(result.getMood())
                 .energyLevel(result.getEnergyLevel())
-                .palette(result.getPalette())
+                .palette(List.of(p1, p2, p3))
                 .patternUrl(AnalysisResponse.resolvePatternUrl(result.getMood()))
                 .latencyMs((int) latencyMs)
                 .fallback(false)
@@ -72,7 +79,7 @@ public class AnalysisService {
         } else {
             String p1 = result.getPalette() != null && result.getPalette().size() > 0 ? result.getPalette().get(0) : "#000000";
             String p2 = result.getPalette() != null && result.getPalette().size() > 1 ? result.getPalette().get(1) : "#000000";
-            String p3 = result.getPalette() != null && result.getPalette().size() > 2 ? result.getPalette().get(2) : "#000000";
+            String p3 = AuraColorDeriver.deriveAccent(p1, p2, Mood.from(result.getMood()));
 
             auraAnalysis = AuraAnalysis.builder()
                     .session(session)
