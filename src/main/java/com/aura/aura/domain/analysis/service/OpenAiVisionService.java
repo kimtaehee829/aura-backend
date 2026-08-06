@@ -98,10 +98,15 @@ public class OpenAiVisionService {
                 .text(SYSTEM_PROMPT)
                 .build();
 
+        String formattedImage = base64Image;
+        if (!formattedImage.startsWith("data:image/")) {
+            formattedImage = "data:image/jpeg;base64," + formattedImage;
+        }
+
         OpenAiRequest.Content imageContent = OpenAiRequest.Content.builder()
                 .type("image_url")
                 .imageUrl(OpenAiRequest.ImageUrl.builder()
-                        .url(base64Image)
+                        .url(formattedImage)
                         .build())
                 .build();
 
