@@ -83,6 +83,9 @@ public class OpenAiVisionService {
 
             String content = response.getChoices().get(0).getMessage().getContent();
             return parseResult(content);
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            log.error("OpenAI API 통신 중 오류 발생 (상태 코드: {}): {}", e.getStatusCode(), e.getResponseBodyAsString());
+            return null;
         } catch (RestClientException e) {
             log.error("OpenAI API 통신 중 오류 발생 (타임아웃 또는 인증 오류): {}", e.getMessage());
             return null;
@@ -98,9 +101,15 @@ public class OpenAiVisionService {
                 .text(SYSTEM_PROMPT)
                 .build();
 
-        String formattedImage = base64Image;
+        String formattedImage = base64Image.replaceAll("\\s+", "");
         if (!formattedImage.startsWith("data:image/")) {
-            formattedImage = "data:image/jpeg;base64," + formattedImage;
+            if (formattedImage.startsWith("iVBOR")) {
+                formattedImage = "data:image/png;base64," + formattedImage;
+            } else if (formattedImage.startsWith("/9j/")) {
+                formattedImage = "data:image/jpeg;base64," + formattedImage;
+            } else {
+                formattedImage = "data:image/jpeg;base64," + formattedImage;
+            }
         }
 
         OpenAiRequest.Content imageContent = OpenAiRequest.Content.builder()
