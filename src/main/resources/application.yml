@@ -27,3 +27,16 @@ openai:
   model: gpt-4o-mini
   connect-timeout-ms: 5000
   read-timeout-ms: 15000
+
+aura:
+  assets:
+    base-url: https://storage.googleapis.com/${gcp.assets-bucket-name}
+    hands:
+      open: /hands/hand_open.png
+      fist: /hands/hand_fist.png
+    patterns:
+      original: /patterns/visetos_original.png
+      street: /patterns/visetos_street.png
+      romantic: /patterns/visetos_romantic.png
+      classic: /patterns/visetos_classic.png
+      minimal: /patterns/visetos_minimal.png
