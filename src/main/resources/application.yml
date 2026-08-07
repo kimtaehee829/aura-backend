@@ -19,6 +19,7 @@ spring:
 gcp:
   project-id: project-5860f6a9-47e2-47ef-9e8
   bucket-name: aura-media-bucket-2026
+  assets-bucket-name: aura-assets-2026
 
 openai:
   api-key: ${OPENAI_API_KEY}
