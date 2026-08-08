@@ -1,6 +1,7 @@
 package com.aura.aura.domain.output.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
+@AllArgsConstructor
 public class FinalizeOutputResponse {
 
     @JsonProperty("landing_url")

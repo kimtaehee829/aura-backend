@@ -65,4 +65,12 @@ public class OutputController {
     ) {
         return ApiResponse.ok(outputService.getOutput(publicId));
     }
+
+    @PostMapping("/video-fail")
+    public ApiResponse<Void> failVideo(
+            @PathVariable String publicId
+    ) {
+        outputService.failVideo(publicId);
+        return ApiResponse.ok();
+    }
 }
