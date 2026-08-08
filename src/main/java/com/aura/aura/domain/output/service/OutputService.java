@@ -8,7 +8,10 @@ import com.aura.aura.domain.output.enums.VideoStatus;
 import com.aura.aura.domain.output.repository.SessionOutputRepository;
 import com.aura.aura.domain.session.entity.Session;
 import com.aura.aura.domain.session.repository.SessionRepository;
+import com.aura.aura.global.exception.BusinessException;
+import com.aura.aura.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,37 +21,32 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Transactional
 public class OutputService {
+    //더미
+    @Value("${app.base-url}")
+    private String baseUrl;
+
+    @Value("${gcp.bucket-name}")
+    private String bucketName;
 
     private final SessionRepository sessionRepository;
     private final SessionOutputRepository sessionOutputRepository;
 
-    /**
-     * 최종 산출물 생성 (SoulTag, QR 등)
-     */
-    public FinalizeOutputResponse finalizeOutput(
-            String publicId,
-            FinalizeOutputRequest request
-    ) {
+    public FinalizeOutputResponse finalizeOutput(String publicId, FinalizeOutputRequest request) {
 
-        // 1. Session 조회
-        Session session = sessionRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new IllegalArgumentException("세션 없음"));
-
-        // 2. 이미 있으면 가져오고 없으면 생성
-        SessionOutput output = sessionOutputRepository.findBySession(session)
-                .orElseGet(() -> {
-                    SessionOutput newOutput = SessionOutput.create(session);
-                    return sessionOutputRepository.save(newOutput);
-                });
+        Session session = getSession(publicId);
+        SessionOutput output = getOrCreateOutput(session);
 
         output.validateReady();
 
-        // 3. 더미 URL 생성 (나중에 교체)
-        String soulTagUrl = "https://dummy/soul-tag/" + publicId;
-        String landingUrl = "https://dummy/landing/" + publicId;
-        String qrUrl = "https://dummy/qr/" + publicId;
+        output.applyFinalizeData(
+                request.getAuraCode(),
+                request.getAttachedAccessoryId()
+        );
 
-        // 4. 값 세팅
+        String soulTagUrl = buildSoulTagUrl(publicId);
+        String landingUrl = buildLandingUrl(publicId);
+        String qrUrl = buildQrUrl(publicId);
+
         output.updateAfterFinalize(
                 soulTagUrl,
                 landingUrl,
@@ -56,7 +54,6 @@ public class OutputService {
                 LocalDateTime.now().plusHours(48)
         );
 
-        // 5. 응답
         return FinalizeOutputResponse.builder()
                 .landingUrl(landingUrl)
                 .qrImageUrl(qrUrl)
@@ -66,105 +63,99 @@ public class OutputService {
                 .build();
     }
 
-    /**
-     * 영상 업로드 URL 발급
-     */
-    public VideoUploadUrlResponse generateVideoUploadUrl(
-            String publicId,
-            VideoUploadUrlRequest request
-    ) {
+    public VideoUploadUrlResponse generateVideoUploadUrl(String publicId, VideoUploadUrlRequest request) {
 
-        Session session = sessionRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new IllegalArgumentException("세션 없음"));
+        Session session = getSession(publicId);
+        SessionOutput output = getOrCreateOutput(session);
 
-        SessionOutput output = sessionOutputRepository.findBySession(session)
-                .orElseGet(() -> {
-                    SessionOutput newOutput = SessionOutput.create(session);
-                    return sessionOutputRepository.save(newOutput);
-                });
+        if (output.getVideoStatus() != VideoStatus.PENDING) {
+            throw new BusinessException(ErrorCode.INVALID_STATUS);
+        }
 
-        // 더미 signed url
-        String uploadUrl = "https://dummy/upload/" + publicId;
+        String objectPath = buildObjectPath(publicId);
+        String uploadUrl = BASE_URL + "/upload/" + publicId;
 
-        String objectPath = "videos/" + publicId + "_" + System.currentTimeMillis() + ".mp4";
-
-// 👉 Entity에게 맡김
         output.startUploading(objectPath);
 
         return VideoUploadUrlResponse.builder()
                 .uploadUrl(uploadUrl)
                 .objectPath(objectPath)
-                .expiresInSeconds(600) // 10분
+                .expiresInSeconds(600)
                 .build();
     }
 
-    /**
-     * 영상 업로드 완료 처리
-     */
-    public VideoCompleteResponse completeVideo(
-            String publicId,
-            VideoCompleteRequest request
-    ) {
+    public VideoCompleteResponse completeVideo(String publicId, VideoCompleteRequest request) {
 
-        Session session = sessionRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new IllegalArgumentException("세션 없음"));
+        Session session = getSession(publicId);
+        SessionOutput output = getOutput(session);
 
-        SessionOutput output = sessionOutputRepository.findBySession(session)
-                .orElseThrow(() -> new IllegalArgumentException("output 없음"));
-
-        // objectPath → 실제 URL 변환 (임시)
-        String videoUrl = "https://storage.googleapis.com/your-bucket/"
-                + request.getObjectPath();
-
-        // 썸네일은 아직 없음
-        String thumbnailUrl = null;
-
-        //경로검증
-        String reqPath = request.getObjectPath();
-
-        if (reqPath == null || reqPath.isBlank()) {
-            throw new IllegalArgumentException("objectPath 필수");
+        if (output.getVideoStatus() != VideoStatus.UPLOADING) {
+            throw new BusinessException(ErrorCode.INVALID_STATUS);
         }
 
-        if (!reqPath.equals(output.getObjectPath())) {
-            throw new IllegalArgumentException("잘못된 objectPath");
+        if (!request.getObjectPath().equals(output.getObjectPath())) {
+            throw new BusinessException(ErrorCode.INVALID_OBJECT_PATH);
         }
 
-        // 엔티티 업데이트
+        String videoUrl = buildVideoUrl(request.getObjectPath());
+
         output.completeVideo(
                 videoUrl,
                 request.getDurationMs(),
-                thumbnailUrl
+                null // TODO: thumbnail
         );
 
-        // response는 실제 값 기준으로
         return VideoCompleteResponse.builder()
-                .videoStatus(output.getVideoStatus().name())
+                .videoStatus(output.getVideoStatus())
                 .build();
     }
 
-    /**
-     * 결과 조회
-     */
     public OutputResponse getOutput(String publicId) {
-
-        Session session = sessionRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new IllegalArgumentException("세션 없음"));
-
-        SessionOutput output = sessionOutputRepository.findBySession(session)
-                .orElseThrow(() -> new IllegalArgumentException("output 없음"));
-
+        Session session = getSession(publicId);
+        SessionOutput output = getOutput(session);
         return OutputResponse.from(output);
     }
 
     public void failVideo(String publicId) {
-
-        Session session = sessionRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new IllegalArgumentException("세션 없음"));
-
-        SessionOutput output = sessionOutputRepository.findBySession(session)
-                .orElseThrow(() -> new IllegalArgumentException("output 없음"));
-
+        Session session = getSession(publicId);
+        SessionOutput output = getOutput(session);
         output.failVideo();
+    }
+
+    // ===== private helpers =====
+
+    private Session getSession(String publicId) {
+        return sessionRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SESSION_NOT_FOUND));
+    }
+
+    private SessionOutput getOrCreateOutput(Session session) {
+        return sessionOutputRepository.findBySession(session)
+                .orElseGet(() -> sessionOutputRepository.save(SessionOutput.create(session)));
+    }
+
+    private SessionOutput getOutput(Session session) {
+        return sessionOutputRepository.findBySession(session)
+                .orElseThrow(() -> new BusinessException(ErrorCode.OUTPUT_NOT_FOUND));
+    }
+
+    private String buildObjectPath(String publicId) {
+        return "videos/" + publicId + "_" + System.currentTimeMillis() + ".mp4";
+    }
+
+    private String buildVideoUrl(String objectPath) {
+        return "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
+    }
+
+    private String buildSoulTagUrl(String publicId) {
+        return BASE_URL + "/soul-tag/" + publicId;
+    }
+
+    private String buildLandingUrl(String publicId) {
+        return BASE_URL + "/landing/" + publicId;
+    }
+
+    private String buildQrUrl(String publicId) {
+        return BASE_URL + "/qr/" + publicId;
     }
 }

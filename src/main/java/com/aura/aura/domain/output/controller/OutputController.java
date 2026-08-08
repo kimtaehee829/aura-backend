@@ -37,7 +37,7 @@ public class OutputController {
     /**
      * 영상 업로드용 Signed URL 발급
      */
-    @PostMapping("/video-url")
+    @PostMapping("/videos/upload-url")
     public ApiResponse<VideoUploadUrlResponse> generateVideoUploadUrl(
             @PathVariable String publicId,
             @Valid @RequestBody VideoUploadUrlRequest request
@@ -48,7 +48,7 @@ public class OutputController {
     /**
      * 영상 업로드 완료
      */
-    @PostMapping("/video-complete")
+    @PostMapping("/videos/complete")
     public ApiResponse<VideoCompleteResponse> completeVideo(
             @PathVariable String publicId,
             @Valid @RequestBody VideoCompleteRequest request
@@ -66,7 +66,7 @@ public class OutputController {
         return ApiResponse.ok(outputService.getOutput(publicId));
     }
 
-    @PostMapping("/video-fail")
+    @PostMapping("/videos/fail")
     public ApiResponse<Void> failVideo(
             @PathVariable String publicId
     ) {
