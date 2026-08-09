@@ -40,3 +40,6 @@ aura:
       romantic: /patterns/visetos_romantic.png
       classic: /patterns/visetos_classic.png
       minimal: /patterns/visetos_minimal.png
+
+app:
+    base-url: https://your-domain.com

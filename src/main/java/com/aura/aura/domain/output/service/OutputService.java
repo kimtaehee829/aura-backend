@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 public class OutputService {
     //더미
     @Value("${app.base-url}")
-    private String baseurl;
+    private String baseUrl;
 
     @Value("${gcp.bucket-name}")
     private String bucketName;
@@ -73,7 +73,7 @@ public class OutputService {
         }
 
         String objectPath = buildObjectPath(publicId);
-        String uploadUrl = baseurl + "/upload/" + publicId;
+        String uploadUrl = baseUrl + "/upload/" + publicId;
 
         output.startUploading(objectPath);
 
@@ -148,14 +148,14 @@ public class OutputService {
     }
 
     private String buildSoulTagUrl(String publicId) {
-        return baseurl + "/soul-tag/" + publicId;
+        return baseUrl + "/soul-tag/" + publicId;
     }
 
     private String buildLandingUrl(String publicId) {
-        return baseurl + "/landing/" + publicId;
+        return baseUrl + "/landing/" + publicId;
     }
 
     private String buildQrUrl(String publicId) {
-        return baseurl + "/qr/" + publicId;
+        return baseUrl + "/qr/" + publicId;
     }
 }
