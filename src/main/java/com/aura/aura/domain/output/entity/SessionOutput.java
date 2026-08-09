@@ -79,7 +79,7 @@ public class SessionOutput {
         this.objectPath = objectPath;
     }
 
-    public void completeVideo(String videoUrl, Integer videoDurationMs, String thumbnailUrl) {
+    public void completeVideo(String videoUrl, Integer videoDurationMs) {
         if (this.videoStatus != VideoStatus.UPLOADING) {
             throw new BusinessException(ErrorCode.INVALID_STATUS);
         }
@@ -87,7 +87,9 @@ public class SessionOutput {
         this.videoStatus = VideoStatus.READY;
         this.videoUrl = videoUrl;
         this.videoDurationMs = videoDurationMs;
-        this.thumbnailUrl = thumbnailUrl;
+
+        // 👉 썸네일 더미
+        this.thumbnailUrl = "https://dummy-thumbnail.com/default.png";
     }
 
     public void failVideo() {

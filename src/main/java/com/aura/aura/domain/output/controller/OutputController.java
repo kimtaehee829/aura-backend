@@ -22,9 +22,6 @@ public class OutputController {
 
     private final OutputService outputService;
 
-    /**
-     * Soul Tag, QR, Landing URL 생성
-     */
     @PostMapping("/finalize")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<FinalizeOutputResponse> finalizeOutput(
@@ -34,10 +31,7 @@ public class OutputController {
         return ApiResponse.ok(outputService.finalizeOutput(publicId, request));
     }
 
-    /**
-     * 영상 업로드용 Signed URL 발급
-     */
-    @PostMapping("/videos/upload-url")
+    @PostMapping("/video-url")
     public ApiResponse<VideoUploadUrlResponse> generateVideoUploadUrl(
             @PathVariable String publicId,
             @Valid @RequestBody VideoUploadUrlRequest request
@@ -45,10 +39,7 @@ public class OutputController {
         return ApiResponse.ok(outputService.generateVideoUploadUrl(publicId, request));
     }
 
-    /**
-     * 영상 업로드 완료
-     */
-    @PostMapping("/videos/complete")
+    @PostMapping("/video-complete")
     public ApiResponse<VideoCompleteResponse> completeVideo(
             @PathVariable String publicId,
             @Valid @RequestBody VideoCompleteRequest request
@@ -56,9 +47,6 @@ public class OutputController {
         return ApiResponse.ok(outputService.completeVideo(publicId, request));
     }
 
-    /**
-     * 산출물 조회
-     */
     @GetMapping
     public ApiResponse<OutputResponse> getOutput(
             @PathVariable String publicId
