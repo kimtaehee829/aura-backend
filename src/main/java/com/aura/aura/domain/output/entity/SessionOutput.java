@@ -27,7 +27,7 @@ public class SessionOutput {
     private Session session;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "video_status", nullable = false, length = 20)
+    @Column(name = "video_status", nullable = false)
     private VideoStatus videoStatus;
 
     @Column(name = "video_url", length = 500)
@@ -88,12 +88,13 @@ public class SessionOutput {
         this.videoUrl = videoUrl;
         this.videoDurationMs = videoDurationMs;
 
-        // 👉 썸네일 더미
+        // TODO: 나중에 프론트 썸네일로 교체
         this.thumbnailUrl = "https://dummy-thumbnail.com/default.png";
     }
 
     public void failVideo() {
         if (this.videoStatus == VideoStatus.FAILED) return;
+
         this.videoStatus = VideoStatus.FAILED;
     }
 

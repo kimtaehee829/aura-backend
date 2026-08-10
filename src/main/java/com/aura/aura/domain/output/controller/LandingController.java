@@ -1,6 +1,6 @@
 package com.aura.aura.domain.output.controller;
 
-import com.aura.aura.domain.output.dto.response.SoulTagResponse;
+import com.aura.aura.domain.output.dto.response.LandingResponse;
 import com.aura.aura.domain.output.service.OutputService;
 import com.aura.aura.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -10,16 +10,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api")
 @RequiredArgsConstructor
-@RequestMapping("/api/soul-tag")
-public class SoulTagController {
+public class LandingController {
 
     private final OutputService outputService;
 
-    @GetMapping("/{publicId}")
-    public ApiResponse<SoulTagResponse> getSoulTag(
+    @GetMapping("/landing/{publicId}")
+    public ApiResponse<LandingResponse> getLanding(
             @PathVariable String publicId
     ) {
-        return ApiResponse.ok(outputService.getSoulTag(publicId));
+        return ApiResponse.ok(outputService.getLanding(publicId));
     }
 }

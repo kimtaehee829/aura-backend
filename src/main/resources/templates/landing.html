@@ -23,16 +23,20 @@
 <script>
     const publicId = document.getElementById("publicId").innerText;
 
-    fetch(`/api/sessions/${publicId}/outputs`)
+    fetch(`http://localhost:8080/api/landing/${publicId}`)
         .then(res => res.json())
         .then(res => {
-            const data = res.data ?? res;
+            const data = res.data;
 
             console.log("최종 data:", data);
 
-            document.getElementById("qr").src = data.qr_image_url;
-            document.getElementById("landingUrl").innerText = data.landing_url;
             document.getElementById("videoStatus").innerText = data.video_status;
+
+            document.getElementById("landingUrl").innerText =
+                data.video_url ?? "영상 없음";
+
+            document.getElementById("qr").src =
+                data.qr_image_url ?? "https://via.placeholder.com/200";
         });
 </script>
 

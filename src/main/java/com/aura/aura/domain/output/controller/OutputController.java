@@ -5,6 +5,7 @@ import com.aura.aura.domain.output.dto.FinalizeOutputResponse;
 import com.aura.aura.domain.output.dto.request.FinalizeOutputRequest;
 import com.aura.aura.domain.output.dto.request.VideoCompleteRequest;
 import com.aura.aura.domain.output.dto.request.VideoUploadUrlRequest;
+import com.aura.aura.domain.output.dto.response.LandingResponse;
 import com.aura.aura.domain.output.dto.response.OutputResponse;
 import com.aura.aura.domain.output.dto.response.VideoCompleteResponse;
 import com.aura.aura.domain.output.dto.response.VideoUploadUrlResponse;

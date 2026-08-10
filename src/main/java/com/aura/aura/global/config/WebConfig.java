@@ -26,4 +26,9 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/qr/**")
                 .addResourceLocations("file:///C:/aura-backend/qr/");
     }
+//    @Override
+//    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//        registry.addResourceHandler("/qr/**")
+//                .addResourceLocations("file:" + System.getProperty("user.dir") + "/qr/");
+//    }
 }

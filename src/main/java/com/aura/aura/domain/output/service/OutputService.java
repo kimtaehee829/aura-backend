@@ -6,6 +6,10 @@ import com.aura.aura.domain.output.dto.response.*;
 import com.aura.aura.domain.output.entity.SessionOutput;
 import com.aura.aura.domain.output.enums.VideoStatus;
 import com.aura.aura.domain.output.repository.SessionOutputRepository;
+import com.aura.aura.domain.product.dto.AccessoryResponse;
+import com.aura.aura.domain.product.dto.ProductResponse;
+import com.aura.aura.domain.product.service.AccessoryService;
+import com.aura.aura.domain.product.service.ProductService;
 import com.aura.aura.domain.session.entity.Session;
 import com.aura.aura.domain.session.repository.SessionRepository;
 import com.aura.aura.global.exception.BusinessException;
@@ -28,12 +32,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class OutputService {
+
+    private final ProductService productService;
+    private final AccessoryService accessoryService;
+
     //더미
     @Value("${app.base-url}")
     private String baseUrl;
@@ -49,8 +59,7 @@ public class OutputService {
         Session session = getSession(publicId);
         SessionOutput output = getOrCreateOutput(session);
 
-        //테스트용 건너뛰기
-        //output.validateReady();
+        output.validateReady();
 
         output.applyFinalizeData(
                 request.getAuraCode(),
@@ -106,6 +115,16 @@ public class OutputService {
                 .objectPath(videoObjectPath)
                 .expiresInSeconds(600)
                 .build();
+
+//        String dummyUrl = "https://dummy-upload-url.com";
+//
+//        output.startUploading(videoObjectPath);
+//
+//        return VideoUploadUrlResponse.builder()
+//                .uploadUrl(dummyUrl)
+//                .objectPath(videoObjectPath)
+//                .expiresInSeconds(600)
+//                .build();
     }
 
     public VideoCompleteResponse completeVideo(String publicId, VideoCompleteRequest request) {
@@ -129,7 +148,7 @@ public class OutputService {
         );
 
         return VideoCompleteResponse.builder()
-                .videoStatus(output.getVideoStatus())
+                .videoStatus(output.getVideoStatus().name())
                 .build();
     }
 
@@ -198,7 +217,8 @@ public class OutputService {
     }
 
     private String buildVideoUrl(String objectPath) {
-        return "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
+        //return "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
+        return "https://dummy-video.com/" + objectPath;
     }
 
     private String buildSoulTagUrl(String publicId) {
@@ -209,13 +229,49 @@ public class OutputService {
         return baseUrl + "/landing/" + publicId;
     }
 
-    public SoulTagResponse getSoulTag(String publicId) {
+    @Transactional(readOnly = true)
+    public LandingResponse getLanding(String publicId) {
 
-        String landingUrl = buildLandingUrl(publicId);
+        Session session = getSession(publicId);
+        SessionOutput output = getOutput(session);
 
-        String qrUrl = baseUrl + "/qr/qr_" + publicId + ".png"; // 나중에 실제 QR
-        String thumbnailUrl = "https://example.com/thumb/" + publicId;
+        List<ProductResponse> products = productService.getProducts(null);
 
-        return new SoulTagResponse(qrUrl, landingUrl, thumbnailUrl);
+        // ❗ accessory 가져오기
+        List<AccessoryResponse> accessories = accessoryService.getSessionAccessories(publicId);
+
+        AccessoryResponse attachedAccessory = accessories.stream()
+                .filter(AccessoryResponse::getIsAttached)
+                .findFirst()
+                .orElse(null);
+
+        if (output.getVideoStatus() != VideoStatus.READY) {
+            return LandingResponse.builder()
+                    .videoStatus(output.getVideoStatus().name())
+                    .build();
+        }
+
+        // ✅ 여기서 소울태그 생성
+        SoulTagResponse soulTag = SoulTagResponse.builder()
+                .imageUrl(output.getSoulTagUrl())
+                .bagName(attachedAccessory != null ? attachedAccessory.getName() : null)
+                .auraCode(
+                        output.getAuraCode() != null
+                                ? List.of(output.getAuraCode().split(","))
+                                : List.of()
+                )
+                .mood("STREET")
+                .styling(attachedAccessory != null ? attachedAccessory.getName() : null)
+                .forgedAt("MCM Cheongdam House")
+                .date("2026-08-20")
+                .build();
+
+        return LandingResponse.builder()
+                .videoStatus(output.getVideoStatus().name())
+                .videoUrl(output.getVideoUrl())
+                .thumbnailUrl(output.getThumbnailUrl())
+                .soulTag(soulTag)
+                .products(products)
+                .build();
     }
 }
