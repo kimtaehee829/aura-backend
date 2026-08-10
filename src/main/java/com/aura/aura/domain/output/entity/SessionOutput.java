@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "session_outputs")
@@ -57,18 +56,8 @@ public class SessionOutput {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "aura_code", length = 100)
-    private String auraCode;
-
-    @Column(name = "accessory_id")
-    private Long accessoryId;
-
     @Column(name = "object_path", length = 500)
     private String objectPath;
-
-    // =========================
-    // 상태 기반 로직 (핵심)
-    // =========================
 
     public void startUploading(String objectPath) {
         if (this.videoStatus != VideoStatus.PENDING) {
@@ -79,17 +68,11 @@ public class SessionOutput {
         this.objectPath = objectPath;
     }
 
-    public void completeVideo(String videoUrl, Integer videoDurationMs) {
-        if (this.videoStatus != VideoStatus.UPLOADING) {
-            throw new BusinessException(ErrorCode.INVALID_STATUS);
-        }
-
-        this.videoStatus = VideoStatus.READY;
+    public void completeVideo(String videoUrl, String thumbnailUrl, Integer durationMs) {
         this.videoUrl = videoUrl;
-        this.videoDurationMs = videoDurationMs;
-
-        // TODO: 나중에 프론트 썸네일로 교체
-        this.thumbnailUrl = "https://dummy-thumbnail.com/default.png";
+        this.thumbnailUrl = thumbnailUrl;
+        this.videoDurationMs = durationMs;
+        this.videoStatus = VideoStatus.READY;
     }
 
     public void failVideo() {
@@ -103,10 +86,6 @@ public class SessionOutput {
             throw new BusinessException(ErrorCode.OUTPUT_NOT_READY);
         }
     }
-
-    // =========================
-    // 생성 & finalize
-    // =========================
 
     public static SessionOutput create(Session session) {
         SessionOutput output = new SessionOutput();
@@ -126,15 +105,6 @@ public class SessionOutput {
         this.qrImageUrl = qrUrl;
         this.expiresAt = expiresAt;
     }
-
-    public void applyFinalizeData(List<String> auraCode, Long accessoryId) {
-        this.auraCode = String.join(",", auraCode);
-        this.accessoryId = accessoryId;
-    }
-
-    // =========================
-    // JPA lifecycle
-    // =========================
 
     @PrePersist
     public void prePersist() {

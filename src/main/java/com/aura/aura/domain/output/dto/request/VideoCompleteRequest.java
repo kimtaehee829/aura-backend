@@ -15,4 +15,6 @@ public class VideoCompleteRequest {
     @NotNull(message = "duration_ms는 필수입니다.")
     @JsonProperty("duration_ms")
     private Integer durationMs;
+
+    private String thumbnailObjectPath;
 }

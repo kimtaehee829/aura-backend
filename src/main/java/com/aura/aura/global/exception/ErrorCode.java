@@ -27,7 +27,7 @@ public enum ErrorCode {
     ANALYSIS_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 아우라 분석이 완료된 세션입니다."),
     ANALYSIS_FAILED(HttpStatus.BAD_GATEWAY, "아우라 분석에 실패했습니다."),
     ANALYSIS_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "아우라 분석이 지연되고 있습니다."),
-
+    ANALYSIS_NOT_FOUND(HttpStatus.NOT_FOUND, "분석 결과를 찾을 수 없습니다."),
     // ---------- Output / Video ----------
     OUTPUT_NOT_FOUND(HttpStatus.NOT_FOUND, "결과물을 찾을 수 없습니다."),
     OUTPUT_NOT_READY(HttpStatus.ACCEPTED, "결과물이 아직 준비되지 않았습니다."),

@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/sessions/{publicId}/outputs")
 @RequiredArgsConstructor
 public class LandingController {
 
     private final OutputService outputService;
 
-    @GetMapping("/landing/{publicId}")
+    @GetMapping("/landing")
     public ApiResponse<LandingResponse> getLanding(
             @PathVariable String publicId
     ) {
