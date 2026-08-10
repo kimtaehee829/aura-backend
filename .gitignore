@@ -56,3 +56,6 @@ src/main/resources/application-secret.yml
 *gcp*.json
 *sa*.json
 aura-backend-sa.json
+
+qr/
+*.mp4

@@ -1,7 +1,6 @@
 package com.aura.aura.domain.output.dto.response;
 
 import com.aura.aura.domain.output.entity.SessionOutput;
-import com.aura.aura.domain.output.enums.VideoStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,13 +10,13 @@ import lombok.Getter;
 public class OutputResponse {
 
     @JsonProperty("video_status")
-    private VideoStatus videoStatus;
+    private String videoStatus;
 
     @JsonProperty("video_url")
     private String videoUrl;
 
     @JsonProperty("video_duration_ms")
-    private Integer videoDurationMs;
+    private Long videoDurationMs;
 
     @JsonProperty("thumbnail_url")
     private String thumbnailUrl;
@@ -33,9 +32,13 @@ public class OutputResponse {
 
     public static OutputResponse from(SessionOutput output) {
         return OutputResponse.builder()
-                .videoStatus(output.getVideoStatus())
+                .videoStatus(output.getVideoStatus().name())
                 .videoUrl(output.getVideoUrl())
-                .videoDurationMs(output.getVideoDurationMs())
+                .videoDurationMs(
+                        output.getVideoDurationMs() != null
+                                ? output.getVideoDurationMs().longValue()
+                                : null
+                )
                 .thumbnailUrl(output.getThumbnailUrl())
                 .soulTagUrl(output.getSoulTagUrl())
                 .qrImageUrl(output.getQrImageUrl())

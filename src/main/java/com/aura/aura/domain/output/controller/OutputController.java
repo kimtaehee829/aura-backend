@@ -1,13 +1,7 @@
 package com.aura.aura.domain.output.controller;
 
-import com.aura.aura.domain.output.dto.*;
-import com.aura.aura.domain.output.dto.FinalizeOutputResponse;
-import com.aura.aura.domain.output.dto.request.FinalizeOutputRequest;
 import com.aura.aura.domain.output.dto.request.VideoCompleteRequest;
-import com.aura.aura.domain.output.dto.request.VideoUploadUrlRequest;
-import com.aura.aura.domain.output.dto.response.OutputResponse;
-import com.aura.aura.domain.output.dto.response.VideoCompleteResponse;
-import com.aura.aura.domain.output.dto.response.VideoUploadUrlResponse;
+import com.aura.aura.domain.output.dto.response.*;
 import com.aura.aura.domain.output.service.OutputService;
 import com.aura.aura.global.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -22,33 +16,22 @@ public class OutputController {
 
     private final OutputService outputService;
 
-    /**
-     * Soul Tag, QR, Landing URL 생성
-     */
     @PostMapping("/finalize")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<FinalizeOutputResponse> finalizeOutput(
-            @PathVariable String publicId,
-            @Valid @RequestBody FinalizeOutputRequest request
+            @PathVariable String publicId
     ) {
-        return ApiResponse.ok(outputService.finalizeOutput(publicId, request));
+        return ApiResponse.ok(outputService.finalizeOutput(publicId));
     }
 
-    /**
-     * 영상 업로드용 Signed URL 발급
-     */
-    @PostMapping("/videos/upload-url")
+    @PostMapping("/video-upload-url")
     public ApiResponse<VideoUploadUrlResponse> generateVideoUploadUrl(
-            @PathVariable String publicId,
-            @Valid @RequestBody VideoUploadUrlRequest request
+            @PathVariable String publicId
     ) {
-        return ApiResponse.ok(outputService.generateVideoUploadUrl(publicId, request));
+        return ApiResponse.ok(outputService.generateVideoUploadUrl(publicId));
     }
 
-    /**
-     * 영상 업로드 완료
-     */
-    @PostMapping("/videos/complete")
+    @PostMapping("/video-complete")
     public ApiResponse<VideoCompleteResponse> completeVideo(
             @PathVariable String publicId,
             @Valid @RequestBody VideoCompleteRequest request
@@ -56,9 +39,6 @@ public class OutputController {
         return ApiResponse.ok(outputService.completeVideo(publicId, request));
     }
 
-    /**
-     * 산출물 조회
-     */
     @GetMapping
     public ApiResponse<OutputResponse> getOutput(
             @PathVariable String publicId
@@ -72,5 +52,12 @@ public class OutputController {
     ) {
         outputService.failVideo(publicId);
         return ApiResponse.ok();
+    }
+
+    @PostMapping("/thumbnail-upload-url")
+    public ApiResponse<ThumbnailUploadUrlResponse> getThumbnailUploadUrl(
+            @PathVariable String publicId
+    ) {
+        return ApiResponse.ok(outputService.getThumbnailUploadUrl(publicId));
     }
 }

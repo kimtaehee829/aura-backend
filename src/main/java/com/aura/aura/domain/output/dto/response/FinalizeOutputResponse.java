@@ -1,4 +1,4 @@
-package com.aura.aura.domain.output.dto;
+package com.aura.aura.domain.output.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

@@ -42,4 +42,4 @@ aura:
       minimal: /patterns/visetos_minimal.png
 
 app:
-    base-url: https://your-domain.com
+  base-url: http://localhost:8080
