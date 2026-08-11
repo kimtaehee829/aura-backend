@@ -54,6 +54,7 @@ public class OutputService {
 
     private final SessionRepository sessionRepository;
     private final SessionOutputRepository sessionOutputRepository;
+    private final SoulTagImageGenerator soulTagImageGenerator;
 
     public FinalizeOutputResponse finalizeOutput(String publicId) {
 
@@ -62,9 +63,41 @@ public class OutputService {
 
         output.validateReady();
 
-        String soulTagUrl = buildSoulTagUrl(publicId);
         String landingUrl = buildLandingUrl(publicId);
         String qrUrl = generateQrImage(publicId, landingUrl);
+        
+        String soulTagUrl;
+        try {
+            AuraAnalysis aura = auraAnalysisRepository.findBySessionId(session.getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.ANALYSIS_NOT_FOUND));
+
+            AccessoryResponse attachedAccessory = accessoryService.getSessionAccessories(publicId)
+                    .stream()
+                    .filter(AccessoryResponse::getIsAttached)
+                    .findFirst()
+                    .orElse(null);
+
+            String bagName = session.getBagProduct() != null ? session.getBagProduct().getName() : null;
+            List<String> auraCodes = List.of(aura.getPalette1(), aura.getPalette2(), aura.getPalette3());
+            String styling = attachedAccessory != null ? attachedAccessory.getName() : null;
+            String storeName = session.getStore() != null ? session.getStore().getName() : null;
+            String date = session.getStartedAt() != null ? session.getStartedAt().toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy. MM. dd")) : null;
+
+            byte[] soulTagBytes = soulTagImageGenerator.generate(bagName, auraCodes, aura.getMood(), styling, storeName, date);
+            
+            Storage storage = StorageOptions.getDefaultInstance().getService();
+            String objectPath = "soul-tags/" + publicId + "_" + System.currentTimeMillis() + ".png";
+            BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectPath)
+                    .setContentType("image/png")
+                    .build();
+            storage.create(blobInfo, soulTagBytes);
+            
+            soulTagUrl = "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.SOUL_TAG_FAILED);
+        }
 
         output.updateAfterFinalize(
                 soulTagUrl,

@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AuraApplication {
 
 	public static void main(String[] args) {
+		System.setProperty("java.awt.headless", "true");
 		SpringApplication.run(AuraApplication.class, args);
 	}
 
