@@ -42,4 +42,4 @@ aura:
       minimal: /patterns/visetos_minimal.png
 
 app:
-  base-url: http://localhost:8080
+  base-url: https://aura-backend-877724382169.asia-northeast3.run.app
