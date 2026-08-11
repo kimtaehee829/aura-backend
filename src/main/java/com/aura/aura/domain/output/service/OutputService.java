@@ -131,7 +131,8 @@ public class OutputService {
                         .build(),
                 10, TimeUnit.MINUTES,
                 Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
-                Storage.SignUrlOption.withContentType());
+                Storage.SignUrlOption.withContentType(),
+                Storage.SignUrlOption.withV4Signature());
 
         output.startUploading(videoObjectPath);
 
@@ -158,7 +159,8 @@ public class OutputService {
         URL signedUrl = storage.signUrl(
                 blobInfo,
                 1, TimeUnit.HOURS,
-                Storage.SignUrlOption.httpMethod(HttpMethod.GET));
+                Storage.SignUrlOption.httpMethod(HttpMethod.GET),
+                Storage.SignUrlOption.withV4Signature());
                 
         return signedUrl.toString();
     }
@@ -375,7 +377,8 @@ public class OutputService {
                 blobInfo,
                 10, TimeUnit.MINUTES,
                 Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
-                Storage.SignUrlOption.withContentType());
+                Storage.SignUrlOption.withContentType(),
+                Storage.SignUrlOption.withV4Signature());
 
         return url.toString();
     }
