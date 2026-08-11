@@ -1,0 +1,177 @@
+{
+  "info": {
+    "name": "Aura Flow: Session to Soul Tag",
+    "description": "세션 생성부터 분석, 비디오 업로드 시뮬레이션, Soul Tag 발급까지 전체 시나리오를 테스트하는 컬렉션입니다.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Create Session",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData && jsonData.data && jsonData.data.public_id) {",
+              "    pm.collectionVariables.set(\"publicId\", jsonData.data.public_id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"store_id\": 1,\n  \"consent_agreed\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/sessions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sessions"
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Create Analysis",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image_base64\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/sessions/{{publicId}}/analysis",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sessions",
+            "{{publicId}}",
+            "analysis"
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Request Video Upload URL",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData && jsonData.data && jsonData.data.object_path) {",
+              "    pm.collectionVariables.set(\"objectPath\", jsonData.data.object_path);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/sessions/{{publicId}}/outputs/video-upload-url",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sessions",
+            "{{publicId}}",
+            "outputs",
+            "video-upload-url"
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Complete Video (시뮬레이션)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"object_path\": \"{{objectPath}}\",\n  \"duration_ms\": 5000\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/sessions/{{publicId}}/outputs/video-complete",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sessions",
+            "{{publicId}}",
+            "outputs",
+            "video-complete"
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Finalize Output (Soul Tag 생성)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/sessions/{{publicId}}/outputs/finalize",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sessions",
+            "{{publicId}}",
+            "outputs",
+            "finalize"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://[여기에_실제_배포된_URL을_입력하세요]",
+      "type": "string"
+    },
+    {
+      "key": "publicId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "objectPath",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
