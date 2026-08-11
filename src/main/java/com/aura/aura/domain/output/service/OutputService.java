@@ -105,8 +105,8 @@ public class OutputService {
 
         return FinalizeOutputResponse.builder()
                 .landingUrl(landingUrl)
-                .qrImageUrl(qrUrl)
-                .soulTagUrl(soulTagUrl)
+                .qrImageUrl(generateSignedGetUrl(qrUrl))
+                .soulTagUrl(generateSignedGetUrl(soulTagUrl))
                 .videoStatus(output.getVideoStatus().name())
                 .expiresAt(output.getExpiresAt())
                 .build();
@@ -146,6 +146,23 @@ public class OutputService {
         return "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
     }
 
+    private String generateSignedGetUrl(String url) {
+        if (url == null) return null;
+        String prefix = "https://storage.googleapis.com/" + bucketName + "/";
+        if (!url.startsWith(prefix)) return url;
+        
+        String objectPath = url.substring(prefix.length());
+        
+        Storage storage = StorageOptions.getDefaultInstance().getService();
+        BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectPath).build();
+        URL signedUrl = storage.signUrl(
+                blobInfo,
+                48, TimeUnit.HOURS,
+                Storage.SignUrlOption.httpMethod(HttpMethod.GET));
+                
+        return signedUrl.toString();
+    }
+
     public VideoCompleteResponse completeVideo(String publicId, VideoCompleteRequest request) {
 
         Session session = getSession(publicId);
@@ -180,7 +197,16 @@ public class OutputService {
     public OutputResponse getOutput(String publicId) {
         Session session = getSession(publicId);
         SessionOutput output = getOutput(session);
-        return OutputResponse.from(output);
+        OutputResponse response = OutputResponse.from(output);
+        return OutputResponse.builder()
+                .videoStatus(response.getVideoStatus())
+                .videoUrl(generateSignedGetUrl(response.getVideoUrl()))
+                .thumbnailUrl(generateSignedGetUrl(response.getThumbnailUrl()))
+                .soulTagUrl(generateSignedGetUrl(response.getSoulTagUrl()))
+                .landingUrl(response.getLandingUrl())
+                .qrImageUrl(generateSignedGetUrl(response.getQrImageUrl()))
+                .videoDurationMs(response.getVideoDurationMs())
+                .build();
     }
 
     public void failVideo(String publicId) {
@@ -266,8 +292,8 @@ public class OutputService {
 
         return LandingResponse.builder()
                 .videoStatus(output.getVideoStatus().name())
-                .videoUrl(output.getVideoUrl())
-                .thumbnailUrl(output.getThumbnailUrl())
+                .videoUrl(generateSignedGetUrl(output.getVideoUrl()))
+                .thumbnailUrl(generateSignedGetUrl(output.getThumbnailUrl()))
                 .soulTag(soulTag)
                 .products(products)
                 .build();
@@ -293,7 +319,7 @@ public class OutputService {
                 .orElse(null);
 
         return SoulTagResponse.builder()
-                .imageUrl(output.getSoulTagUrl())
+                .imageUrl(generateSignedGetUrl(output.getSoulTagUrl()))
 
                 .bagName(
                         session.getBagProduct() != null
