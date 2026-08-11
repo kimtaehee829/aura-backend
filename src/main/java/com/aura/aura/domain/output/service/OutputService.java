@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -45,7 +44,6 @@ public class OutputService {
     private final AccessoryService accessoryService;
     private final AuraAnalysisRepository auraAnalysisRepository;
 
-    //더미
     @Value("${app.base-url}")
     private String baseUrl;
 
@@ -78,7 +76,7 @@ public class OutputService {
                     .orElse(null);
 
             String bagName = session.getBagProduct() != null ? session.getBagProduct().getName() : null;
-            List<String> auraCodes = List.of(aura.getPalette1(), aura.getPalette2(), aura.getPalette3());
+            List<String> auraCodes = java.util.Arrays.asList(aura.getPalette1(), aura.getPalette2(), aura.getPalette3());
             String styling = attachedAccessory != null ? attachedAccessory.getName() : null;
             String storeName = session.getStore() != null ? session.getStore().getName() : null;
             String date = session.getStartedAt() != null ? session.getStartedAt().toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy. MM. dd")) : null;
@@ -103,8 +101,7 @@ public class OutputService {
                 soulTagUrl,
                 landingUrl,
                 qrUrl,
-                LocalDateTime.now().plusHours(48)
-        );
+                LocalDateTime.now().plusHours(48));
 
         return FinalizeOutputResponse.builder()
                 .landingUrl(landingUrl)
@@ -134,8 +131,7 @@ public class OutputService {
                         .build(),
                 10, TimeUnit.MINUTES,
                 Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
-                Storage.SignUrlOption.withContentType()
-        );
+                Storage.SignUrlOption.withContentType());
 
         output.startUploading(videoObjectPath);
 
@@ -174,8 +170,7 @@ public class OutputService {
         output.completeVideo(
                 videoUrl,
                 thumbnailUrl,
-                request.getDurationMs()
-        );
+                request.getDurationMs());
 
         return VideoCompleteResponse.builder()
                 .videoStatus(output.getVideoStatus().name())
@@ -202,15 +197,12 @@ public class OutputService {
                     url,
                     BarcodeFormat.QR_CODE,
                     size,
-                    size
-            );
+                    size);
 
-            // 1. byte[] 생성
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(matrix, "PNG", outputStream);
             byte[] qrBytes = outputStream.toByteArray();
 
-            // 2. GCS 업로드
             Storage storage = StorageOptions.getDefaultInstance().getService();
 
             String objectPath = "qr/" + publicId + "_" + System.currentTimeMillis() + ".png";
@@ -221,15 +213,12 @@ public class OutputService {
 
             storage.create(blobInfo, qrBytes);
 
-            // 3. URL 반환
             return "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
 
         } catch (Exception e) {
             throw new RuntimeException("QR 생성 실패", e);
         }
     }
-
-    // ===== private helpers =====
 
     private Session getSession(String publicId) {
         return sessionRepository.findByPublicId(publicId)
@@ -252,10 +241,6 @@ public class OutputService {
 
     private String buildVideoUrl(String objectPath) {
         return "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
-    }
-
-    private String buildSoulTagUrl(String publicId) {
-        return baseUrl + "/soul-tag/" + publicId;
     }
 
     private String buildLandingUrl(String publicId) {
@@ -298,11 +283,9 @@ public class OutputService {
             throw new BusinessException(ErrorCode.INVALID_STATUS);
         }
 
-        // ✅ aura_analysis 조회
         AuraAnalysis aura = auraAnalysisRepository.findBySessionId(session.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ANALYSIS_NOT_FOUND));
 
-        // ✅ accessory
         AccessoryResponse attachedAccessory = accessoryService.getSessionAccessories(publicId)
                 .stream()
                 .filter(AccessoryResponse::getIsAttached)
@@ -315,14 +298,12 @@ public class OutputService {
                 .bagName(
                         session.getBagProduct() != null
                                 ? session.getBagProduct().getName()
-                                : null
-                )
+                                : null)
 
-                .auraCode(List.of(
+                .auraCode(java.util.Arrays.asList(
                         aura.getPalette1(),
                         aura.getPalette2(),
-                        aura.getPalette3()
-                ))
+                        aura.getPalette3()))
 
                 .mood(aura.getMood())
 
@@ -345,10 +326,8 @@ public class OutputService {
             throw new BusinessException(ErrorCode.INVALID_STATUS);
         }
 
-        // 파일 경로 생성 (중요)
         String objectPath = "thumbnails/" + publicId + "_" + System.currentTimeMillis() + ".png";
 
-        // signed url 생성
         String uploadUrl = generateUploadUrl(objectPath, "image/png");
 
         return ThumbnailUploadUrlResponse.builder()
@@ -370,8 +349,7 @@ public class OutputService {
                 blobInfo,
                 10, TimeUnit.MINUTES,
                 Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
-                Storage.SignUrlOption.withContentType()
-        );
+                Storage.SignUrlOption.withContentType());
 
         return url.toString();
     }

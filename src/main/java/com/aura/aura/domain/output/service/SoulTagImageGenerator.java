@@ -32,11 +32,10 @@ public class SoulTagImageGenerator {
     }
 
     private BufferedImage copyTemplate() {
-        BufferedImage copy = new BufferedImage(template.getWidth(), template.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = copy.createGraphics();
-        g.drawImage(template, 0, 0, null);
-        g.dispose();
-        return copy;
+        java.awt.image.ColorModel cm = template.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        java.awt.image.WritableRaster raster = template.copyData(null);
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
 
     public byte[] generate(String bagName, List<String> auraCodes, String mood, String styling, String storeName, String date) {
@@ -48,28 +47,31 @@ public class SoulTagImageGenerator {
             g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
-            g.setFont(font);
+            double scale = (double) template.getWidth() / 344.0;
+
+            Font scaledFont = this.font.deriveFont((float) (12 * scale));
+            g.setFont(scaledFont);
             g.setColor(Color.decode("#525252"));
 
             FontMetrics fm = g.getFontMetrics();
             int ascent = fm.getAscent();
 
-            int baseX = 108;
+            int baseX = (int) Math.round(108 * scale);
             
-            g.drawString(bagName != null ? bagName : "Unknown", baseX, 70 + ascent);
-            g.drawString(mood != null ? mood : "Unknown", baseX, 112 + ascent);
+            g.drawString(bagName != null ? bagName : "Unknown", baseX, (int) Math.round(70 * scale) + ascent);
+            g.drawString(mood != null ? mood : "Unknown", baseX, (int) Math.round(112 * scale) + ascent);
             
             String displayStyling = (styling != null && !styling.trim().isEmpty()) ? styling : "—";
-            g.drawString(displayStyling, baseX, 134 + ascent);
+            g.drawString(displayStyling, baseX, (int) Math.round(134 * scale) + ascent);
             
-            g.drawString(storeName != null ? storeName : "Unknown", baseX, 155 + ascent);
-            g.drawString(date != null ? date : "Unknown", baseX, 176 + ascent);
+            g.drawString(storeName != null ? storeName : "Unknown", baseX, (int) Math.round(155 * scale) + ascent);
+            g.drawString(date != null ? date : "Unknown", baseX, (int) Math.round(176 * scale) + ascent);
 
             int currentX = baseX;
-            int circleY = 91;
-            int circleSize = 10;
-            int circleToTextSpacing = 4;
-            int textToNextCircleSpacing = 6;
+            int circleY = (int) Math.round(91 * scale);
+            int circleSize = (int) Math.round(10 * scale);
+            int circleToTextSpacing = (int) Math.round(4 * scale);
+            int textToNextCircleSpacing = (int) Math.round(6 * scale);
 
             int textY = circleY + (circleSize - fm.getHeight()) / 2 + fm.getAscent();
 
