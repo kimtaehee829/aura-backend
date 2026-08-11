@@ -32,14 +32,14 @@ public class LandingEvent {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "occurred_at", nullable = false, updatable = false)
+    private LocalDateTime occurredAt;
 
     @Builder
     public LandingEvent(Session session, LandingEventType eventType, Product product) {
         this.session = session;
         this.eventType = eventType;
         this.product = product;
-        this.createdAt = LocalDateTime.now();
+        this.occurredAt = LocalDateTime.now();
     }
 }
