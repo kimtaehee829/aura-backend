@@ -17,18 +17,18 @@ public class OutputController {
     private final OutputService outputService;
 
     @PostMapping("/finalize")
-    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<FinalizeOutputResponse> finalizeOutput(
             @PathVariable String publicId
     ) {
         return ApiResponse.ok(outputService.finalizeOutput(publicId));
     }
 
-    @PostMapping("/video-upload-url")
-    public ApiResponse<VideoUploadUrlResponse> generateVideoUploadUrl(
-            @PathVariable String publicId
+    @PostMapping("/video-url")
+    public ApiResponse<VideoUploadUrlResponse> generateVideoUrl(
+            @PathVariable String publicId,
+            @Valid @RequestBody com.aura.aura.domain.output.dto.request.VideoUrlRequest request
     ) {
-        return ApiResponse.ok(outputService.generateVideoUploadUrl(publicId));
+        return ApiResponse.ok(outputService.generateVideoUrl(publicId, request));
     }
 
     @PostMapping("/video-complete")
@@ -54,10 +54,5 @@ public class OutputController {
         return ApiResponse.ok();
     }
 
-    @PostMapping("/thumbnail-upload-url")
-    public ApiResponse<ThumbnailUploadUrlResponse> getThumbnailUploadUrl(
-            @PathVariable String publicId
-    ) {
-        return ApiResponse.ok(outputService.getThumbnailUploadUrl(publicId));
-    }
+
 }
