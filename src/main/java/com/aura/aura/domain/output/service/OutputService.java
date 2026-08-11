@@ -157,7 +157,7 @@ public class OutputService {
         BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectPath).build();
         URL signedUrl = storage.signUrl(
                 blobInfo,
-                48, TimeUnit.HOURS,
+                1, TimeUnit.HOURS,
                 Storage.SignUrlOption.httpMethod(HttpMethod.GET));
                 
         return signedUrl.toString();
