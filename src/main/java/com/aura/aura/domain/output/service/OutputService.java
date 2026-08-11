@@ -88,7 +88,7 @@ public class OutputService {
             BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectPath)
                     .setContentType("image/png")
                     .build();
-            storage.create(blobInfo, soulTagBytes, Storage.BlobTargetOption.predefinedAcl(Storage.PredefinedAcl.PUBLIC_READ));
+            storage.create(blobInfo, soulTagBytes);
             
             soulTagUrl = "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
         } catch (BusinessException e) {
@@ -239,7 +239,7 @@ public class OutputService {
                     .setContentType("image/png")
                     .build();
 
-            storage.create(blobInfo, qrBytes, Storage.BlobTargetOption.predefinedAcl(Storage.PredefinedAcl.PUBLIC_READ));
+            storage.create(blobInfo, qrBytes);
 
             return "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
 
