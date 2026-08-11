@@ -16,6 +16,12 @@ public class VideoUploadUrlResponse {
     @JsonProperty("object_path")
     private String objectPath;
 
+    @JsonProperty("thumbnail_upload_url")
+    private String thumbnailUploadUrl;
+
+    @JsonProperty("thumbnail_object_path")
+    private String thumbnailObjectPath;
+
     @JsonProperty("expires_in_seconds")
     private Integer expiresInSeconds;
 

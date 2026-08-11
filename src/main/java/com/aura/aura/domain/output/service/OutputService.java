@@ -112,7 +112,7 @@ public class OutputService {
                 .build();
     }
 
-    public VideoUploadUrlResponse generateVideoUploadUrl(String publicId) {
+    public VideoUploadUrlResponse generateVideoUrl(String publicId, VideoUrlRequest request) {
 
         Session session = getSession(publicId);
         SessionOutput output = getOrCreateOutput(session);
@@ -121,13 +121,17 @@ public class OutputService {
             throw new BusinessException(ErrorCode.INVALID_STATUS);
         }
 
+        if (!"video/mp4".equals(request.getContentType())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+
         String videoObjectPath = buildObjectPath(publicId);
 
         Storage storage = StorageOptions.getDefaultInstance().getService();
 
         URL videoUrl = storage.signUrl(
                 BlobInfo.newBuilder(bucketName, videoObjectPath)
-                        .setContentType("video/mp4")
+                        .setContentType(request.getContentType())
                         .build(),
                 10, TimeUnit.MINUTES,
                 Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
@@ -136,9 +140,19 @@ public class OutputService {
 
         output.startUploading(videoObjectPath);
 
+        String thumbnailUploadUrl = null;
+        String thumbnailObjectPath = null;
+
+        if (Boolean.TRUE.equals(request.getIncludeThumbnail())) {
+            thumbnailObjectPath = "thumbnails/" + publicId + "_" + System.currentTimeMillis() + ".png";
+            thumbnailUploadUrl = generateUploadUrl(thumbnailObjectPath, "image/png");
+        }
+
         return VideoUploadUrlResponse.builder()
                 .uploadUrl(videoUrl.toString())
                 .objectPath(videoObjectPath)
+                .thumbnailUploadUrl(thumbnailUploadUrl)
+                .thumbnailObjectPath(thumbnailObjectPath)
                 .expiresInSeconds(600)
                 .build();
     }
@@ -344,26 +358,7 @@ public class OutputService {
                 .build();
     }
 
-    public ThumbnailUploadUrlResponse getThumbnailUploadUrl(String publicId) {
 
-        Session session = getSession(publicId);
-
-        SessionOutput output = getOutput(session);
-
-        if (output.getVideoStatus() != VideoStatus.UPLOADING) {
-            throw new BusinessException(ErrorCode.INVALID_STATUS);
-        }
-
-        String objectPath = "thumbnails/" + publicId + "_" + System.currentTimeMillis() + ".png";
-
-        String uploadUrl = generateUploadUrl(objectPath, "image/png");
-
-        return ThumbnailUploadUrlResponse.builder()
-                .uploadUrl(uploadUrl)
-                .objectPath(objectPath)
-                .expiresInSeconds(600)
-                .build();
-    }
 
     public String generateUploadUrl(String objectPath, String contentType) {
 
