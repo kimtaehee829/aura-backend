@@ -29,8 +29,8 @@ public class AuraAnalysis {
     @Column(nullable = false, length = 30)
     private String mood;
 
-    @Column(name = "energy_level", length = 10)
-    private String energyLevel;
+    @Column(name = "energy_level")
+    private Integer energyLevel;
 
     @Column(name = "palette_1", nullable = false, length = 7)
     private String palette1;
@@ -54,7 +54,7 @@ public class AuraAnalysis {
     private LocalDateTime createdAt;
 
     @Builder
-    public AuraAnalysis(Session session, String style, String mood, String energyLevel,
+    public AuraAnalysis(Session session, String style, String mood, Integer energyLevel,
                         String palette1, String palette2, String palette3,
                         Integer latencyMs, Boolean isFallback, String rawJson) {
         this.session = session;
