@@ -14,6 +14,6 @@ public class AuraAnalysisResult {
     private String style;
     private String mood;
     @JsonProperty("energy_level")
-    private String energyLevel;
+    private Integer energyLevel;
     private List<String> palette;
 }

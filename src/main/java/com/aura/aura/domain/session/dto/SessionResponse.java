@@ -38,7 +38,7 @@
             private String style;
             private String mood;
             @JsonProperty("energy_level")
-            private String energyLevel;
+            private Integer energyLevel;
             private List<String> palette;
             @JsonProperty("pattern_url")
             private String patternUrl;
