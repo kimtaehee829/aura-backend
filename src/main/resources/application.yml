@@ -43,3 +43,4 @@ aura:
 
 app:
   base-url: https://aura-backend-877724382169.asia-northeast3.run.app
+  admin-key: ${ADMIN_KEY:default-local-secret-1234}
