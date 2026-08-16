@@ -28,11 +28,11 @@ public class AdminInteractionService {
     private final InteractionEventRepository interactionEventRepository;
     private final Storage storage;
 
-    @Value("${gcp.bucket-name}")
+    @Value("${gcp.assets-bucket-name}")
     private String bucketName;
 
-    private static final String CSV_HEADER_SUMMARY = "Total Events,Average Dwell Time (ms),Average Rotation Degrees,Completion Rate (%),Most Popular Part,Most Popular Part Count,Least Popular Part,Least Popular Part Count\n";
-    private static final String CSV_HEADER_DATA = "Session ID,Phase,Target Type,Target Part,Product ID,Gesture,Dwell Time (ms),Rotation (degrees),Completed,Occurred At\n";
+    private static final String CSV_HEADER_SUMMARY = "총 이벤트 수,평균 체류 시간(ms),평균 회전 각도(도),제스처 완료율(%),최고 인기 부위,최고 인기 부위 횟수,최소 인기 부위,최소 인기 부위 횟수\n";
+    private static final String CSV_HEADER_DATA = "세션 ID,진행 단계(Phase),대상 종류,대상 부위,상품 ID,제스처,체류 시간(ms),회전 각도(도),성공 여부,발생 시각\n";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String generateAndUploadWeeklyReport() {
