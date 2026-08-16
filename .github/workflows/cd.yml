@@ -51,4 +51,5 @@ jobs:
             SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
             SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }}
             SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
+            ADMIN_KEY=${{ secrets.ADMIN_KEY }}
           flags: '--allow-unauthenticated'

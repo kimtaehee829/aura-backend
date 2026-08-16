@@ -16,3 +16,4 @@ aura:
 
 app:
   base-url: https://aura-frontend-dun.vercel.app
+  admin-key: ${ADMIN_KEY}
