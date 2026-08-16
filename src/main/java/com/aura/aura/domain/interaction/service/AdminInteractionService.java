@@ -31,7 +31,6 @@ public class AdminInteractionService {
     @Value("${gcp.bucket-name}")
     private String bucketName;
 
-    // CSV 헤더 상수
     private static final String CSV_HEADER_SUMMARY = "Total Events,Average Dwell Time (ms),Average Rotation Degrees,Completion Rate (%),Most Popular Part,Most Popular Part Count,Least Popular Part,Least Popular Part Count\n";
     private static final String CSV_HEADER_DATA = "Session ID,Phase,Target Type,Target Part,Product ID,Gesture,Dwell Time (ms),Rotation (degrees),Completed,Occurred At\n";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -52,12 +51,9 @@ public class AdminInteractionService {
     }
 
     private String generateWeeklyCsvReport() {
-        // 지난 주 월요일 00:00:00 부터 일요일 23:59:59 까지 계산
         LocalDate today = LocalDate.now();
         LocalDate lastMonday = today.with(TemporalAdjusters.previous(DayOfWeek.MONDAY)).minusWeeks(1);
         if (today.getDayOfWeek() == DayOfWeek.MONDAY) {
-            // 오늘이 월요일이면 previous(MONDAY)는 지난주 월요일임, minusWeeks(1) 하면 지지난주가 됨
-            // TemporalAdjusters.previous(MONDAY) from Monday gives previous Monday.
             lastMonday = today.minusWeeks(1);
         } else {
             lastMonday = today.with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
@@ -71,16 +67,13 @@ public class AdminInteractionService {
         List<InteractionEvent> events = interactionEventRepository.findByOccurredAtBetweenOrderByOccurredAtAsc(startOfLastWeek, endOfLastWeek);
 
         StringBuilder csvBuilder = new StringBuilder();
-        
-        // UTF-8 BOM for Excel compatibility
+
         csvBuilder.append('\ufeff');
 
-        // 요약표 작성
         appendSummary(csvBuilder, events);
         
-        csvBuilder.append("\n"); // 한 줄 띄우기
+        csvBuilder.append("\n");
 
-        // 원본 데이터 작성
         csvBuilder.append(CSV_HEADER_DATA);
         for (InteractionEvent event : events) {
             appendEventRow(csvBuilder, event);
@@ -118,7 +111,6 @@ public class AdminInteractionService {
                 .count();
         double completionRate = ((double) completedCount / totalEvents) * 100.0;
 
-        // 부위별 카운트 (targetPart가 null이 아니고 빈 문자열이 아닌 것만)
         Map<String, Long> partCounts = events.stream()
                 .filter(e -> e.getTargetPart() != null && !e.getTargetPart().trim().isEmpty())
                 .collect(Collectors.groupingBy(InteractionEvent::getTargetPart, Collectors.counting()));
