@@ -12,4 +12,6 @@ public interface InteractionEventRepository extends JpaRepository<InteractionEve
     @Query("select e.seq from InteractionEvent e where e.session.id = :sessionId")
     Set<Integer> findSeqsBySessionId(@Param("sessionId") Long sessionId);
 
+    java.util.List<InteractionEvent> findByOccurredAtBetweenOrderByOccurredAtAsc(java.time.LocalDateTime start, java.time.LocalDateTime end);
+
 }
