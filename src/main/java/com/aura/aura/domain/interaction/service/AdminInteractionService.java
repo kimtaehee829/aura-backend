@@ -149,7 +149,13 @@ public class AdminInteractionService {
         builder.append(escapeCsv(event.getPhase())).append(",");
         builder.append(escapeCsv(event.getTargetType())).append(",");
         builder.append(escapeCsv(event.getTargetPart())).append(",");
-        builder.append(event.getTargetProduct() != null ? event.getTargetProduct().getId() : "").append(",");
+        Long productId = null;
+        if (event.getTargetProduct() != null) {
+            productId = event.getTargetProduct().getId();
+        } else if ("BAG_PART".equals(event.getTargetType()) && event.getSession().getBagProduct() != null) {
+            productId = event.getSession().getBagProduct().getId();
+        }
+        builder.append(productId != null ? productId : "").append(",");
         builder.append(escapeCsv(event.getGesture())).append(",");
         builder.append(event.getDwellMs()).append(",");
         builder.append(event.getRotationDegrees() != null ? event.getRotationDegrees() : "").append(",");
