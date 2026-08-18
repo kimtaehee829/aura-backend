@@ -85,6 +85,7 @@ public class OutputService {
             String objectPath = "soul-tags/" + publicId + "_" + System.currentTimeMillis() + ".png";
             BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectPath)
                     .setContentType("image/png")
+                    .setContentDisposition("attachment; filename=\"soultag_" + publicId + ".png\"")
                     .build();
             storage.create(blobInfo, soulTagBytes);
             
