@@ -59,8 +59,6 @@ public class OutputService {
         Session session = getSession(publicId);
         SessionOutput output = getOrCreateOutput(session);
 
-        output.validateReady();
-
         String landingUrl = buildLandingUrl(publicId);
         String qrUrl = generateQrImage(publicId, landingUrl);
         
@@ -297,13 +295,6 @@ public class OutputService {
 
         List<ProductResponse> products = productService.getProducts(null);
 
-        if (output.getVideoStatus() != VideoStatus.READY) {
-            return LandingResponse.builder()
-                    .videoStatus(output.getVideoStatus().name())
-                    .products(products)
-                    .build();
-        }
-
         SoulTagResponse soulTag = getSoulTag(publicId);
 
         return LandingResponse.builder()
@@ -320,10 +311,6 @@ public class OutputService {
 
         Session session = getSession(publicId);
         SessionOutput output = getOutput(session);
-
-        if (output.getVideoStatus() != VideoStatus.READY) {
-            throw new BusinessException(ErrorCode.INVALID_STATUS);
-        }
 
         AuraAnalysis aura = auraAnalysisRepository.findBySessionId(session.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ANALYSIS_NOT_FOUND));
