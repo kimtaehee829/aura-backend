@@ -39,7 +39,7 @@ public class AdminInteractionService {
         String csvContent = generateWeeklyCsvReport();
         byte[] csvBytes = csvContent.getBytes(StandardCharsets.UTF_8);
 
-        String objectPath = "reports/weekly-interactions.csv";
+        String objectPath = "reports/" + getWeeklyFileName();
         
         BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectPath)
                 .setContentType("text/csv; charset=UTF-8")
