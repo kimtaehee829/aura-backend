@@ -19,10 +19,28 @@ spring:
 gcp:
   project-id: project-5860f6a9-47e2-47ef-9e8
   bucket-name: aura-media-bucket-2026
+  assets-bucket-name: aura-assets-2026
 
 openai:
   api-key: ${OPENAI_API_KEY}
   base-url: https://api.openai.com/v1
   model: gpt-4o-mini
-  connect-timeout-ms: 2000
-  read-timeout-ms: 5000
+  connect-timeout-ms: 5000
+  read-timeout-ms: 15000
+
+aura:
+  assets:
+    base-url: https://storage.googleapis.com/${gcp.assets-bucket-name}
+    hands:
+      open: /hands/hand_open.png
+      fist: /hands/hand_fist.png
+    patterns:
+      original: /patterns/visetos_original.png
+      street: /patterns/visetos_street.png
+      romantic: /patterns/visetos_romantic.png
+      classic: /patterns/visetos_classic.png
+      minimal: /patterns/visetos_minimal.png
+
+app:
+  base-url: https://aura-backend-877724382169.asia-northeast3.run.app
+  admin-key: ${ADMIN_KEY:default-local-secret-1234}

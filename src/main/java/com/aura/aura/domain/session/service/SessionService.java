@@ -1,7 +1,9 @@
 package com.aura.aura.domain.session.service;
 
 import com.aura.aura.domain.analysis.entity.AuraAnalysis;
+import com.aura.aura.domain.analysis.entity.Mood;
 import com.aura.aura.domain.analysis.repository.AuraAnalysisRepository;
+import com.aura.aura.domain.asset.config.AssetProperties;
 import com.aura.aura.domain.product.entity.Product;
 import com.aura.aura.domain.product.repository.ProductRepository;
 import com.aura.aura.domain.session.dto.*;
@@ -27,6 +29,7 @@ public class SessionService {
     private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
     private final AuraAnalysisRepository auraAnalysisRepository;
+    private final AssetProperties assetProperties;
 
     @Transactional
     public SessionCreateResponse createSession(SessionCreateRequest request) {
@@ -115,7 +118,7 @@ public class SessionService {
                     .mood(analysis.getMood())
                     .energyLevel(analysis.getEnergyLevel())
                     .palette(java.util.List.of(analysis.getPalette1(), analysis.getPalette2(), analysis.getPalette3()))
-                    .patternUrl(com.aura.aura.domain.analysis.dto.AnalysisResponse.resolvePatternUrl(analysis.getMood()))
+                    .patternUrl(assetProperties.getPatternUrl(Mood.from(analysis.getMood())))
                     .build();
         }
 

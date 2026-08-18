@@ -3,7 +3,9 @@ package com.aura.aura.domain.analysis.service;
 import com.aura.aura.domain.analysis.dto.AnalysisResponse;
 import com.aura.aura.domain.analysis.dto.openai.AuraAnalysisResult;
 import com.aura.aura.domain.analysis.entity.AuraAnalysis;
+import com.aura.aura.domain.analysis.entity.Mood;
 import com.aura.aura.domain.analysis.repository.AuraAnalysisRepository;
+import com.aura.aura.domain.asset.config.AssetProperties;
 import com.aura.aura.domain.session.entity.Session;
 import com.aura.aura.domain.session.repository.SessionRepository;
 import com.aura.aura.global.exception.BusinessException;
@@ -13,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -21,6 +25,7 @@ public class AnalysisService {
     private final OpenAiVisionService openAiVisionService;
     private final AuraAnalysisRepository auraAnalysisRepository;
     private final SessionRepository sessionRepository;
+    private final AssetProperties assetProperties;
 
     public AnalysisResponse previewAnalysis(String base64Image) {
         long startTime = System.currentTimeMillis();
@@ -31,12 +36,16 @@ public class AnalysisService {
             return buildFallbackResponse(latencyMs);
         }
 
+        String p1 = result.getPalette() != null && result.getPalette().size() > 0 ? result.getPalette().get(0) : "#000000";
+        String p2 = result.getPalette() != null && result.getPalette().size() > 1 ? result.getPalette().get(1) : "#000000";
+        String p3 = AuraColorDeriver.deriveAccent(p1, p2, Mood.from(result.getMood()));
+
         return AnalysisResponse.builder()
                 .style(result.getStyle())
                 .mood(result.getMood())
                 .energyLevel(result.getEnergyLevel())
-                .palette(result.getPalette())
-                .patternUrl(AnalysisResponse.resolvePatternUrl(result.getMood()))
+                .palette(List.of(p1, p2, p3))
+                .patternUrl(assetProperties.getPatternUrl(Mood.from(result.getMood())))
                 .latencyMs((int) latencyMs)
                 .fallback(false)
                 .build();
@@ -62,7 +71,7 @@ public class AnalysisService {
                     .session(session)
                     .style("STREET")
                     .mood("STREET")
-                    .energyLevel("HIGH")
+                    .energyLevel(60)
                     .palette1("#2E4A7D")
                     .palette2("#FFD700")
                     .palette3("#1A1A2E")
@@ -72,7 +81,7 @@ public class AnalysisService {
         } else {
             String p1 = result.getPalette() != null && result.getPalette().size() > 0 ? result.getPalette().get(0) : "#000000";
             String p2 = result.getPalette() != null && result.getPalette().size() > 1 ? result.getPalette().get(1) : "#000000";
-            String p3 = result.getPalette() != null && result.getPalette().size() > 2 ? result.getPalette().get(2) : "#000000";
+            String p3 = AuraColorDeriver.deriveAccent(p1, p2, Mood.from(result.getMood()));
 
             auraAnalysis = AuraAnalysis.builder()
                     .session(session)
@@ -89,7 +98,7 @@ public class AnalysisService {
 
         auraAnalysisRepository.save(auraAnalysis);
 
-        return AnalysisResponse.fromEntity(auraAnalysis);
+        return AnalysisResponse.fromEntity(auraAnalysis, assetProperties.getPatternUrl(Mood.from(auraAnalysis.getMood())));
     }
 
     private AnalysisResponse buildFallbackResponse(long latencyMs) {
@@ -97,9 +106,9 @@ public class AnalysisService {
         return AnalysisResponse.builder()
                 .style("STREET")
                 .mood("STREET")
-                .energyLevel("HIGH")
+                .energyLevel(60)
                 .palette(java.util.List.of("#2E4A7D", "#FFD700", "#1A1A2E"))
-                .patternUrl(AnalysisResponse.resolvePatternUrl("STREET"))
+                .patternUrl(assetProperties.getPatternUrl(Mood.STREET))
                 .latencyMs((int) latencyMs)
                 .fallback(true)
                 .build();

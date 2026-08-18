@@ -12,4 +12,8 @@ spring:
 
 aura:
   cors:
-    allowed-origins: http://localhost:3000,http://localhost:5173
+    allowed-origins: http://localhost:3000,http://localhost:5173,http://localhost:5174,https://aura-frontend-dun.vercel.app
+
+app:
+  base-url: https://aura-frontend-dun.vercel.app
+  admin-key: ${ADMIN_KEY}

@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 public interface InteractionEventRepository extends JpaRepository<InteractionEvent, Long> {
@@ -12,6 +14,6 @@ public interface InteractionEventRepository extends JpaRepository<InteractionEve
     @Query("select e.seq from InteractionEvent e where e.session.id = :sessionId")
     Set<Integer> findSeqsBySessionId(@Param("sessionId") Long sessionId);
 
-    java.util.List<InteractionEvent> findByOccurredAtBetweenOrderByOccurredAtAsc(java.time.LocalDateTime start, java.time.LocalDateTime end);
+    List<InteractionEvent> findByOccurredAtBetweenOrderByOccurredAtAsc(LocalDateTime start, LocalDateTime end);
 
 }
