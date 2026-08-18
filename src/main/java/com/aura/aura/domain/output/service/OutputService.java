@@ -77,7 +77,7 @@ public class OutputService {
             List<String> auraCodes = java.util.Arrays.asList(aura.getPalette1(), aura.getPalette2(), aura.getPalette3());
             String styling = attachedAccessory != null ? attachedAccessory.getName() : null;
             String storeName = session.getStore() != null ? session.getStore().getName() : null;
-            String date = session.getStartedAt() != null ? session.getStartedAt().toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy. MM. dd")) : null;
+            String date = session.getStartedAt() != null ? session.getStartedAt().plusHours(9).toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy. MM. dd")) : null;
 
             byte[] soulTagBytes = soulTagImageGenerator.generate(bagName, auraCodes, aura.getMood(), styling, storeName, date);
             
@@ -339,7 +339,7 @@ public class OutputService {
 
                 .forgedAt(session.getStore().getName())
 
-                .date(session.getStartedAt().toLocalDate().toString())
+                .date(session.getStartedAt().plusHours(9).toLocalDate().toString())
 
                 .styling(attachedAccessory != null ? attachedAccessory.getName() : null)
 
