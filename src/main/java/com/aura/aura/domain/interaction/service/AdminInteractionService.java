@@ -36,21 +36,20 @@ public class AdminInteractionService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String generateAndUploadWeeklyReport() {
-        String csvContent = generateWeeklyCsvReport();
-        byte[] csvBytes = csvContent.getBytes(StandardCharsets.UTF_8);
+        byte[] excelBytes = generateWeeklyExcelReport();
 
         String objectPath = "reports/" + getWeeklyFileName();
         
         BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectPath)
-                .setContentType("text/csv; charset=UTF-8")
+                .setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 .build();
                 
-        storage.create(blobInfo, csvBytes);
+        storage.create(blobInfo, excelBytes);
         
         return "https://storage.googleapis.com/" + bucketName + "/" + objectPath;
     }
 
-    private String generateWeeklyCsvReport() {
+    private byte[] generateWeeklyExcelReport() {
         LocalDate today = LocalDate.now();
         LocalDate lastMonday = today.with(TemporalAdjusters.previous(DayOfWeek.MONDAY)).minusWeeks(1);
         if (today.getDayOfWeek() == DayOfWeek.MONDAY) {
@@ -66,110 +65,111 @@ public class AdminInteractionService {
 
         List<InteractionEvent> events = interactionEventRepository.findByOccurredAtBetweenOrderByOccurredAtAsc(startOfLastWeek, endOfLastWeek);
 
-        StringBuilder csvBuilder = new StringBuilder();
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+            org.apache.poi.xssf.usermodel.XSSFSheet sheet = workbook.createSheet("Weekly Interactions");
 
-        csvBuilder.append('\ufeff');
+            org.apache.poi.xssf.usermodel.XSSFCellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.LEFT);
 
-        appendSummary(csvBuilder, events);
-        
-        csvBuilder.append("\n");
+            org.apache.poi.xssf.usermodel.XSSFCellStyle dataStyle = workbook.createCellStyle();
+            dataStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.LEFT);
 
-        csvBuilder.append(CSV_HEADER_DATA);
-        for (InteractionEvent event : events) {
-            appendEventRow(csvBuilder, event);
-        }
-
-        return csvBuilder.toString();
-    }
-
-    private void appendSummary(StringBuilder builder, List<InteractionEvent> events) {
-        if (events.isEmpty()) {
-            builder.append(CSV_HEADER_SUMMARY);
-            builder.append("0,0,0,0.0%,-,-,-,-\n");
-            return;
-        }
-
-        int totalEvents = events.size();
-        
-        double avgDwell = events.stream()
-                .mapToInt(InteractionEvent::getDwellMs)
-                .average()
-                .orElse(0.0);
-
-        List<Integer> rotations = events.stream()
-                .filter(e -> e.getRotationDegrees() != null)
-                .map(InteractionEvent::getRotationDegrees)
-                .toList();
-        
-        double avgRotation = rotations.stream()
-                .mapToInt(Integer::intValue)
-                .average()
-                .orElse(0.0);
-
-        long completedCount = events.stream()
-                .filter(InteractionEvent::getIsCompleted)
-                .count();
-        double completionRate = ((double) completedCount / totalEvents) * 100.0;
-
-        Map<String, Long> partCounts = events.stream()
-                .filter(e -> e.getTargetPart() != null && !e.getTargetPart().trim().isEmpty())
-                .collect(Collectors.groupingBy(InteractionEvent::getTargetPart, Collectors.counting()));
-
-        String mostPopularPart = "-";
-        long mostPopularCount = 0;
-        String leastPopularPart = "-";
-        long leastPopularCount = 0;
-
-        if (!partCounts.isEmpty()) {
-            Map.Entry<String, Long> maxEntry = partCounts.entrySet().stream()
-                    .max(Map.Entry.comparingByValue())
-                    .orElse(null);
-            if (maxEntry != null) {
-                mostPopularPart = maxEntry.getKey();
-                mostPopularCount = maxEntry.getValue();
+            int rowIndex = 0;
+            org.apache.poi.ss.usermodel.Row summaryHeaderRow = sheet.createRow(rowIndex++);
+            String[] summaryHeaders = {"총 이벤트 수", "평균 체류 시간(ms)", "평균 회전 각도(도)", "제스처 완료율(%)", "최고 인기 부위", "최고 인기 부위 횟수", "최소 인기 부위", "최소 인기 부위 횟수"};
+            for (int i = 0; i < summaryHeaders.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = summaryHeaderRow.createCell(i);
+                cell.setCellValue(summaryHeaders[i]);
+                cell.setCellStyle(headerStyle);
             }
 
-            Map.Entry<String, Long> minEntry = partCounts.entrySet().stream()
-                    .min(Map.Entry.comparingByValue())
-                    .orElse(null);
-            if (minEntry != null) {
-                leastPopularPart = minEntry.getKey();
-                leastPopularCount = minEntry.getValue();
+            org.apache.poi.ss.usermodel.Row summaryDataRow = sheet.createRow(rowIndex++);
+            if (events.isEmpty()) {
+                summaryDataRow.createCell(0).setCellValue(0);
+                summaryDataRow.createCell(1).setCellValue(0);
+                summaryDataRow.createCell(2).setCellValue(0);
+                summaryDataRow.createCell(3).setCellValue("0.0%");
+                summaryDataRow.createCell(4).setCellValue("-");
+                summaryDataRow.createCell(5).setCellValue("-");
+                summaryDataRow.createCell(6).setCellValue("-");
+                summaryDataRow.createCell(7).setCellValue("-");
+                for (int i=0; i<8; i++) summaryDataRow.getCell(i).setCellStyle(dataStyle);
+            } else {
+                int totalEvents = events.size();
+                double avgDwell = events.stream().mapToInt(InteractionEvent::getDwellMs).average().orElse(0.0);
+                List<Integer> rotations = events.stream().filter(e -> e.getRotationDegrees() != null).map(InteractionEvent::getRotationDegrees).toList();
+                double avgRotation = rotations.stream().mapToInt(Integer::intValue).average().orElse(0.0);
+                long completedCount = events.stream().filter(InteractionEvent::getIsCompleted).count();
+                double completionRate = ((double) completedCount / totalEvents) * 100.0;
+                Map<String, Long> partCounts = events.stream().filter(e -> e.getTargetPart() != null && !e.getTargetPart().trim().isEmpty()).collect(Collectors.groupingBy(InteractionEvent::getTargetPart, Collectors.counting()));
+                String mostPopularPart = "-";
+                long mostPopularCount = 0;
+                String leastPopularPart = "-";
+                long leastPopularCount = 0;
+                if (!partCounts.isEmpty()) {
+                    Map.Entry<String, Long> maxEntry = partCounts.entrySet().stream().max(Map.Entry.comparingByValue()).orElse(null);
+                    if (maxEntry != null) { mostPopularPart = maxEntry.getKey(); mostPopularCount = maxEntry.getValue(); }
+                    Map.Entry<String, Long> minEntry = partCounts.entrySet().stream().min(Map.Entry.comparingByValue()).orElse(null);
+                    if (minEntry != null) { leastPopularPart = minEntry.getKey(); leastPopularCount = minEntry.getValue(); }
+                }
+                
+                summaryDataRow.createCell(0).setCellValue(totalEvents);
+                summaryDataRow.createCell(1).setCellValue(Math.round(avgDwell));
+                summaryDataRow.createCell(2).setCellValue(Math.round(avgRotation));
+                summaryDataRow.createCell(3).setCellValue(String.format("%.1f%%", completionRate));
+                summaryDataRow.createCell(4).setCellValue(mostPopularPart);
+                summaryDataRow.createCell(5).setCellValue(mostPopularCount);
+                summaryDataRow.createCell(6).setCellValue(leastPopularPart);
+                summaryDataRow.createCell(7).setCellValue(leastPopularCount);
+                for (int i=0; i<8; i++) summaryDataRow.getCell(i).setCellStyle(dataStyle);
             }
-        }
 
-        builder.append(CSV_HEADER_SUMMARY);
-        builder.append(String.format("%d,%.0f,%.0f,%.1f%%,%s,%d,%s,%d\n",
-                totalEvents, avgDwell, avgRotation, completionRate,
-                mostPopularPart, mostPopularCount, leastPopularPart, leastPopularCount));
-    }
+            rowIndex++; // 빈 줄 추가
+            
+            org.apache.poi.ss.usermodel.Row dataHeaderRow = sheet.createRow(rowIndex++);
+            String[] dataHeaders = {"세션 ID", "진행 단계(Phase)", "대상 종류", "대상 부위", "상품 ID", "제스처", "체류 시간(ms)", "회전 각도(도)", "성공 여부", "발생 시각"};
+            for (int i = 0; i < dataHeaders.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = dataHeaderRow.createCell(i);
+                cell.setCellValue(dataHeaders[i]);
+                cell.setCellStyle(headerStyle);
+            }
 
-    private void appendEventRow(StringBuilder builder, InteractionEvent event) {
-        builder.append(escapeCsv(event.getSession().getPublicId())).append(",");
-        builder.append(escapeCsv(event.getPhase())).append(",");
-        builder.append(escapeCsv(event.getTargetType())).append(",");
-        builder.append(escapeCsv(event.getTargetPart())).append(",");
-        Long productId = null;
-        if (event.getTargetProduct() != null) {
-            productId = event.getTargetProduct().getId();
-        } else if ("BAG_PART".equals(event.getTargetType()) && event.getSession().getBagProduct() != null) {
-            productId = event.getSession().getBagProduct().getId();
-        }
-        builder.append(productId != null ? productId : "").append(",");
-        builder.append(escapeCsv(event.getGesture())).append(",");
-        builder.append(event.getDwellMs()).append(",");
-        builder.append(event.getRotationDegrees() != null ? event.getRotationDegrees() : "").append(",");
-        builder.append(event.getIsCompleted() ? "O" : "X").append(",");
-        builder.append(event.getOccurredAt().format(DATE_FORMATTER)).append("\n");
-    }
+            for (InteractionEvent event : events) {
+                org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowIndex++);
+                row.createCell(0).setCellValue(event.getSession().getPublicId() != null ? event.getSession().getPublicId() : "");
+                row.createCell(1).setCellValue(event.getPhase() != null ? event.getPhase() : "");
+                row.createCell(2).setCellValue(event.getTargetType() != null ? event.getTargetType() : "");
+                row.createCell(3).setCellValue(event.getTargetPart() != null ? event.getTargetPart() : "");
+                
+                Long productId = null;
+                if (event.getTargetProduct() != null) {
+                    productId = event.getTargetProduct().getId();
+                } else if ("BAG_PART".equals(event.getTargetType()) && event.getSession().getBagProduct() != null) {
+                    productId = event.getSession().getBagProduct().getId();
+                }
+                if (productId != null) row.createCell(4).setCellValue(productId);
+                else row.createCell(4).setCellValue("");
+                
+                row.createCell(5).setCellValue(event.getGesture() != null ? event.getGesture() : "");
+                row.createCell(6).setCellValue(event.getDwellMs() != null ? event.getDwellMs() : 0);
+                row.createCell(7).setCellValue(event.getRotationDegrees() != null ? event.getRotationDegrees() : 0);
+                row.createCell(8).setCellValue(event.getIsCompleted() != null && event.getIsCompleted() ? "O" : "X");
+                row.createCell(9).setCellValue(event.getOccurredAt() != null ? event.getOccurredAt().format(DATE_FORMATTER) : "");
+                for (int i=0; i<10; i++) row.getCell(i).setCellStyle(dataStyle);
+            }
 
-    private String escapeCsv(String value) {
-        if (value == null) return "";
-        value = value.replace("\"", "\"\"");
-        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
-            return "\"" + value + "\"";
+            for (int i = 0; i < 10; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            workbook.write(bos);
+            return bos.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Excel creation failed", e);
         }
-        return value;
     }
 
     public String getWeeklyFileName() {
@@ -183,6 +183,6 @@ public class AdminInteractionService {
         LocalDate lastSunday = lastMonday.plusDays(6);
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyyMMdd");
-        return "interactions_weekly_" + lastMonday.format(fmt) + "_" + lastSunday.format(fmt) + ".csv";
+        return "interactions_weekly_" + lastMonday.format(fmt) + "_" + lastSunday.format(fmt) + ".xlsx";
     }
 }
