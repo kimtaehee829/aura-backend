@@ -79,6 +79,9 @@ public class SessionOutput {
         if (this.videoStatus == VideoStatus.FAILED) return;
 
         this.videoStatus = VideoStatus.FAILED;
+        this.videoUrl = null;
+        this.thumbnailUrl = null;
+        this.objectPath = null;
     }
 
     public void validateReady() {
