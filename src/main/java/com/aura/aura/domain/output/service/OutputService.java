@@ -59,6 +59,11 @@ public class OutputService {
         Session session = getSession(publicId);
         SessionOutput output = getOrCreateOutput(session);
 
+        // 타임아웃 등으로 영상 생성이 완료(READY)되지 않은 상태에서 확정(finalize)되면 실패로 간주
+        if (output.getVideoStatus() != VideoStatus.READY) {
+            output.failVideo();
+        }
+
         String landingUrl = buildLandingUrl(publicId);
         String qrUrl = generateQrImage(publicId, landingUrl);
         
