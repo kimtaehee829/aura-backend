@@ -2,6 +2,8 @@ package com.aura.aura.domain.interaction.service;
 
 import com.aura.aura.domain.interaction.entity.InteractionEvent;
 import com.aura.aura.domain.interaction.repository.InteractionEventRepository;
+import com.aura.aura.domain.landing.entity.LandingEvent;
+import com.aura.aura.domain.landing.repository.LandingEventRepository;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 public class AdminInteractionService {
 
     private final InteractionEventRepository interactionEventRepository;
+    private final LandingEventRepository landingEventRepository;
     private final Storage storage;
 
     @Value("${gcp.assets-bucket-name}")
@@ -64,6 +67,7 @@ public class AdminInteractionService {
         LocalDateTime endOfLastWeek = lastSunday.atTime(LocalTime.MAX);
 
         List<InteractionEvent> events = interactionEventRepository.findByOccurredAtBetweenOrderByOccurredAtAsc(startOfLastWeek, endOfLastWeek);
+        List<LandingEvent> landingEvents = landingEventRepository.findByOccurredAtBetweenOrderByOccurredAtAsc(startOfLastWeek, endOfLastWeek);
 
         try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
             org.apache.poi.xssf.usermodel.XSSFSheet sheet = workbook.createSheet("Weekly Interactions");
@@ -162,6 +166,57 @@ public class AdminInteractionService {
 
             for (int i = 0; i < 10; i++) {
                 sheet.autoSizeColumn(i);
+            }
+
+            // Sheet 2: Landing Events
+            org.apache.poi.xssf.usermodel.XSSFSheet sheet2 = workbook.createSheet("Landing Events");
+
+            rowIndex = 0;
+            org.apache.poi.ss.usermodel.Row landingSummaryHeaderRow = sheet2.createRow(rowIndex++);
+            String[] landingSummaryHeaders = {"총 이벤트 수", "페이지 뷰", "영상 재생", "영상 다운로드", "소울 태그 다운로드", "구매 링크 클릭"};
+            for (int i = 0; i < landingSummaryHeaders.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = landingSummaryHeaderRow.createCell(i);
+                cell.setCellValue(landingSummaryHeaders[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            org.apache.poi.ss.usermodel.Row landingSummaryDataRow = sheet2.createRow(rowIndex++);
+            long pageViewCount = landingEvents.stream().filter(e -> "PAGE_VIEW".equals(e.getEventType().name())).count();
+            long videoPlayCount = landingEvents.stream().filter(e -> "VIDEO_PLAY".equals(e.getEventType().name())).count();
+            long videoDownloadCount = landingEvents.stream().filter(e -> "VIDEO_DOWNLOAD".equals(e.getEventType().name())).count();
+            long soulTagDownloadCount = landingEvents.stream().filter(e -> "SOUL_TAG_DOWNLOAD".equals(e.getEventType().name())).count();
+            long purchaseClickCount = landingEvents.stream().filter(e -> "PURCHASE_CLICK".equals(e.getEventType().name())).count();
+
+            landingSummaryDataRow.createCell(0).setCellValue(landingEvents.size());
+            landingSummaryDataRow.createCell(1).setCellValue(pageViewCount);
+            landingSummaryDataRow.createCell(2).setCellValue(videoPlayCount);
+            landingSummaryDataRow.createCell(3).setCellValue(videoDownloadCount);
+            landingSummaryDataRow.createCell(4).setCellValue(soulTagDownloadCount);
+            landingSummaryDataRow.createCell(5).setCellValue(purchaseClickCount);
+            for (int i=0; i<6; i++) landingSummaryDataRow.getCell(i).setCellStyle(dataStyle);
+
+            rowIndex++; // 빈 줄 추가
+
+            org.apache.poi.ss.usermodel.Row landingDataHeaderRow = sheet2.createRow(rowIndex++);
+            String[] landingDataHeaders = {"세션 ID", "이벤트 타입", "상품 ID", "상품명", "발생 시각"};
+            for (int i = 0; i < landingDataHeaders.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = landingDataHeaderRow.createCell(i);
+                cell.setCellValue(landingDataHeaders[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            for (LandingEvent event : landingEvents) {
+                org.apache.poi.ss.usermodel.Row row = sheet2.createRow(rowIndex++);
+                row.createCell(0).setCellValue(event.getSession().getPublicId() != null ? event.getSession().getPublicId() : "");
+                row.createCell(1).setCellValue(event.getEventType() != null ? event.getEventType().name() : "");
+                row.createCell(2).setCellValue(event.getProduct() != null ? event.getProduct().getId().toString() : "");
+                row.createCell(3).setCellValue(event.getProduct() != null ? event.getProduct().getName() : "");
+                row.createCell(4).setCellValue(event.getOccurredAt() != null ? event.getOccurredAt().format(DATE_FORMATTER) : "");
+                for (int i=0; i<5; i++) row.getCell(i).setCellStyle(dataStyle);
+            }
+
+            for (int i = 0; i < 5; i++) {
+                sheet2.autoSizeColumn(i);
             }
 
             java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
