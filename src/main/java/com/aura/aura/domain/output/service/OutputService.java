@@ -211,7 +211,7 @@ public class OutputService {
 
     public OutputResponse getOutput(String publicId) {
         Session session = getSession(publicId);
-        SessionOutput output = getOutput(session);
+        SessionOutput output = getOrCreateOutput(session);
         OutputResponse response = OutputResponse.from(output);
         return OutputResponse.builder()
                 .videoStatus(response.getVideoStatus())
@@ -226,7 +226,7 @@ public class OutputService {
 
     public void failVideo(String publicId) {
         Session session = getSession(publicId);
-        SessionOutput output = getOutput(session);
+        SessionOutput output = getOrCreateOutput(session);
         output.failVideo();
     }
 
@@ -292,7 +292,7 @@ public class OutputService {
     public LandingResponse getLanding(String publicId) {
 
         Session session = getSession(publicId);
-        SessionOutput output = getOutput(session);
+        SessionOutput output = getOrCreateOutput(session);
 
         List<ProductResponse> products = productService.getProducts(null);
 
@@ -311,7 +311,7 @@ public class OutputService {
     public SoulTagResponse getSoulTag(String publicId) {
 
         Session session = getSession(publicId);
-        SessionOutput output = getOutput(session);
+        SessionOutput output = getOrCreateOutput(session);
 
         AuraAnalysis aura = auraAnalysisRepository.findBySessionId(session.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ANALYSIS_NOT_FOUND));
