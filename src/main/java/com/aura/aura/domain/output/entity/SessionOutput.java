@@ -106,6 +106,15 @@ public class SessionOutput {
         this.expiresAt = expiresAt;
     }
 
+    public void markAsExpired() {
+        this.videoStatus = VideoStatus.EXPIRED;
+        this.videoUrl = null;
+        this.thumbnailUrl = null;
+        this.soulTagUrl = null;
+        this.qrImageUrl = null;
+        this.objectPath = null;
+    }
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
