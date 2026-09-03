@@ -48,6 +48,7 @@ jobs:
           region: ${{ secrets.GCP_REGION }}
           image: ${{ secrets.GCP_ARTIFACT_REGISTRY }}/aura-backend:${{ github.sha }}
           env_vars: |
+            SPRING_PROFILES_ACTIVE=prod
             SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
             SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }}
             SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
