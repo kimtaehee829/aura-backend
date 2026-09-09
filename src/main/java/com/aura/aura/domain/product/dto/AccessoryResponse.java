@@ -26,6 +26,11 @@ public class AccessoryResponse {
     @JsonProperty("is_attached")
     private Boolean isAttached;
 
+    private Integer price;
+
+    @JsonProperty("purchase_url")
+    private String purchaseUrl;
+
     public static AccessoryResponse of(Product product, Integer slotOrder, Boolean isAttached) {
         return AccessoryResponse.builder()
                 .productId(product.getId())
@@ -34,6 +39,8 @@ public class AccessoryResponse {
                 .modelUrl(product.getModelUrl())
                 .imageUrl(product.getImageUrl())
                 .isAttached(isAttached)
+                .price(product.getPrice())
+                .purchaseUrl(product.getPurchaseUrl())
                 .build();
     }
 }
